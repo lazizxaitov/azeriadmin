@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f9f6f2;
+  --surface: #fffdfb;
+  --card: #ffffff;
+  --ink: #1e1e1e;
+  --muted: #6b5f55;
+  --stroke: rgba(30, 30, 30, 0.12);
+  --brand: #b56a3b;
+  --brand-soft: #cfb07a;
+  --accent: #e7d8bf;
+  --success: #1c7c54;
+  --danger: #d32f2f;
+  --shadow: 0 18px 48px rgba(58, 44, 30, 0.18);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-montserrat);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+.grainy {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(181, 106, 59, 0.12), transparent 55%),
+    radial-gradient(circle at 88% 22%, rgba(207, 176, 122, 0.18), transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(231, 216, 191, 0.5), transparent 55%),
+    linear-gradient(180deg, rgba(255, 253, 251, 0.9), rgba(249, 246, 242, 0.9));
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
