@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
@@ -14,11 +14,11 @@ type OrderItemInput = {
 };
 
 export async function POST(request: Request) {
-  const authError = requirePublicApiKey();
+  const authError = await requirePublicApiKey();
   if (authError) {
     return NextResponse.json({ error: authError.message }, { status: authError.status });
   }
-  const rateError = rateLimit();
+  const rateError = await rateLimit();
   if (rateError) {
     return NextResponse.json({ error: rateError.message }, { status: rateError.status });
   }

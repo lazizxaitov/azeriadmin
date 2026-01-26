@@ -6,14 +6,14 @@ import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const authError = requirePublicApiKey();
+  const authError = await requirePublicApiKey();
   if (authError) {
     return NextResponse.json(
       { error: authError.message },
       { status: authError.status }
     );
   }
-  const rateError = rateLimit();
+  const rateError = await rateLimit();
   if (rateError) {
     return NextResponse.json(
       { error: rateError.message },

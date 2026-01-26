@@ -54,7 +54,11 @@ export function verifySessionToken(token: string | undefined | null) {
   if (!crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) return null;
   const payloadRaw = base64UrlDecode(payloadEncoded).toString("utf8");
   try {
-    const payload = JSON.parse(payloadRaw) as { u: string; exp: number };
+    const payload = JSON.parse(payloadRaw) as {
+      u: string;
+      exp: number;
+      r?: "admin" | "cashier";
+    };
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
     return payload;
   } catch {

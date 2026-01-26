@@ -226,20 +226,20 @@ function tableHasRows(table: string) {
   return Boolean(row);
 }
 
-function tableExists(source: Database, table: string) {
+function tableExists(source: any, table: string) {
   const row = source
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
     .get(table) as { name?: string } | undefined;
   return Boolean(row?.name);
 }
 
-function getColumns(source: Database, table: string) {
+function getColumns(source: any, table: string) {
   return (
     source.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
   ).map((col) => col.name);
 }
 
-function copyTable(source: Database, target: Database, table: string) {
+function copyTable(source: any, target: any, table: string) {
   if (!tableExists(source, table)) return;
   if (tableHasRows(table)) return;
   const rows = source.prepare(`SELECT * FROM ${table}`).all() as Array<

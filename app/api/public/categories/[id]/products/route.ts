@@ -9,11 +9,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authError = requirePublicApiKey();
+  const authError = await requirePublicApiKey();
   if (authError) {
     return NextResponse.json({ error: authError.message }, { status: authError.status });
   }
-  const rateError = rateLimit();
+  const rateError = await rateLimit();
   if (rateError) {
     return NextResponse.json({ error: rateError.message }, { status: rateError.status });
   }
