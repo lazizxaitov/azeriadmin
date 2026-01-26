@@ -213,7 +213,17 @@ function ensureColumn(table: string, column: string, type: string) {
     .all() as Array<{ name: string }>;
   const exists = columns.some((col) => col.name === column);
   if (!exists) {
-    db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+    try {
+      db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        /duplicate column name/i.test(error.message)
+      ) {
+        return;
+      }
+      throw error;
+    }
   }
 }
 
