@@ -26,6 +26,7 @@ type Order = {
   in_delivery_at?: string | null;
   completed_at?: string | null;
   canceled_at?: string | null;
+  cancel_reason?: string | null;
   courier_name?: string | null;
   courier_phone?: string | null;
   courier_car_number?: string | null;
@@ -281,6 +282,17 @@ export default function CashierHistoryPage() {
                 </div>
               </div>
             </div>
+
+            {selected.status === "canceled" ? (
+              <div className="mt-4 rounded-2xl border border-[var(--stroke)] bg-white p-4 text-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+                  Причина отмены
+                </p>
+                <p className="mt-2 text-[var(--ink)]">
+                  {selected.cancel_reason || "—"}
+                </p>
+              </div>
+            ) : null}
 
             <div className="mt-4 rounded-2xl border border-[var(--stroke)] bg-white p-4 text-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">

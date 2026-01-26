@@ -56,6 +56,8 @@ export default function CashierPage() {
   const initializedRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [rejecting, setRejecting] = useState<Order | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const playNotificationSound = () => {
     try {
@@ -133,6 +135,18 @@ export default function CashierPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    load();
+  };
+
+  const confirmReject = async () => {
+    if (!rejecting) return;
+    await fetch(`/api/cashier/orders/${rejecting.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "canceled", cancelReason: rejectReason }),
+    });
+    setRejecting(null);
+    setRejectReason("");
     load();
   };
 
@@ -307,7 +321,10 @@ export default function CashierPage() {
                         Принять заказ
                       </button>
                       <button
-                        onClick={() => setOrderStatus(order.id, "canceled")}
+                        onClick={() => {
+                          setRejecting(order);
+                          setRejectReason("");
+                        }}
                         className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
                       >
                         Не принять
@@ -482,6 +499,51 @@ export default function CashierPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {rejecting ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 py-10">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setRejecting(null)}
+          />
+          <div className="relative z-10 w-full max-w-lg rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-extrabold text-[var(--ink)]">
+                Причина отмены заказа #{rejecting.id}
+              </h3>
+              <button
+                onClick={() => setRejecting(null)}
+                className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm"
+              >
+                Закрыть
+              </button>
+            </div>
+            <label className="text-sm font-semibold">
+              Причина
+              <textarea
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                rows={3}
+                className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+              />
+            </label>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                onClick={confirmReject}
+                className="rounded-2xl bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow)] transition hover:-translate-y-[1px] hover:bg-[#9f5b33]"
+              >
+                Подтвердить
+              </button>
+              <button
+                onClick={() => setRejecting(null)}
+                className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+              >
+                Отмена
+              </button>
             </div>
           </div>
         </div>

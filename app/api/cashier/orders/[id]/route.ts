@@ -27,6 +27,7 @@ export async function PUT(
         ? Number(body.courierId)
         : null;
   const nextStatus = body?.status?.toString()?.trim();
+  const cancelReason = body?.cancelReason?.toString()?.trim() ?? null;
 
   const db = getDb();
   const now = nowIso();
@@ -75,9 +76,13 @@ export async function PUT(
       updateFields.push("completed_at = ?");
       updateParams.push(now);
     }
-    if (status === "canceled" && !order.canceled_at) {
-      updateFields.push("canceled_at = ?");
-      updateParams.push(now);
+    if (status === "canceled") {
+      if (!order.canceled_at) {
+        updateFields.push("canceled_at = ?");
+        updateParams.push(now);
+      }
+      updateFields.push("cancel_reason = ?");
+      updateParams.push(cancelReason);
     }
 
     updateParams.push(id);

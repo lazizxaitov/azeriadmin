@@ -116,6 +116,7 @@ db.exec(`
     in_delivery_at TEXT,
     completed_at TEXT,
     canceled_at TEXT,
+    cancel_reason TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (customer_id) REFERENCES customers(id),
@@ -238,6 +239,7 @@ ensureColumn("orders", "accepted_at", "TEXT");
 ensureColumn("orders", "in_delivery_at", "TEXT");
 ensureColumn("orders", "completed_at", "TEXT");
 ensureColumn("orders", "canceled_at", "TEXT");
+ensureColumn("orders", "cancel_reason", "TEXT");
 ensureColumn("couriers", "car_number", "TEXT");
 ensureColumn("couriers", "comment", "TEXT");
 ensureColumn("settings", "bonus_percent", "REAL NOT NULL DEFAULT 0");
