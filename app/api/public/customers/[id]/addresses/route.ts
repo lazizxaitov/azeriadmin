@@ -5,6 +5,43 @@ import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 
 export const runtime = "nodejs";
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authError = await requirePublicApiKey();
+  if (authError) {
+    return NextResponse.json(
+      { error: authError.message },
+      { status: authError.status }
+    );
+  }
+  const rateError = await rateLimit();
+  if (rateError) {
+    return NextResponse.json(
+      { error: rateError.message },
+      { status: rateError.status }
+    );
+  }
+
+  const customerId = Number((await params).id);
+  if (!customerId) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
+  const db = getDb();
+  const items = db
+    .prepare(
+      `SELECT id, customer_id, label, address_line, comment, is_default, created_at
+       FROM customer_addresses
+       WHERE customer_id = ?
+       ORDER BY is_default DESC, created_at DESC`
+    )
+    .all(customerId);
+
+  return NextResponse.json({ items });
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

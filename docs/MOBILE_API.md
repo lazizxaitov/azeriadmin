@@ -97,4 +97,26 @@ Notes:
 
 ---
 
+## 5) Get customer addresses
+**GET** `/api/public/customers/:id/addresses`
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": 10,
+      "customer_id": 1,
+      "label": "Home",
+      "address_line": "Tashkent, ...",
+      "comment": "Entrance 3",
+      "is_default": 1,
+      "created_at": "2026-01-25T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+Use this endpoint after login to restore saved addresses.
+
 If you need password change or refresh token endpoints, tell me and I’ll add them.
