@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -9,6 +9,7 @@ type Courier = {
   id: number;
   name: string;
   phone?: string | null;
+  car_number?: string | null;
 };
 
 type OrderItem = {
@@ -33,6 +34,14 @@ type Order = {
   items: OrderItem[];
 };
 
+const statusLabels: Record<string, string> = {
+  paid: "Новый",
+  accepted: "Принят",
+  in_delivery: "В доставке",
+  completed: "Доставлен",
+  canceled: "Отменён",
+};
+
 export default function CashierPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,6 +51,7 @@ export default function CashierPage() {
   const [newOrder, setNewOrder] = useState<Order | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [ordersHistoryOpen, setOrdersHistoryOpen] = useState(false);
   const [notifications, setNotifications] = useState<Order[]>([]);
   const seenIdsRef = useRef<Set<number>>(new Set());
   const initializedRef = useRef(false);
@@ -118,6 +128,15 @@ export default function CashierPage() {
     load();
   };
 
+  const setOrderStatus = async (orderId: number, status: string) => {
+    await fetch(`/api/cashier/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    load();
+  };
+
   const logout = async () => {
     await fetch("/api/auth/cashier-logout", { method: "POST" });
     router.push("/login");
@@ -127,6 +146,11 @@ export default function CashierPage() {
     setHistoryOpen(true);
     setUnreadCount(0);
   };
+
+  const activeOrders = orders.filter(
+    (order) => order.status !== "completed" && order.status !== "canceled"
+  );
+  const completedOrders = orders.filter((order) => order.status === "completed");
 
   return (
     <div className="min-h-screen grainy px-6 py-8">
@@ -168,6 +192,12 @@ export default function CashierPage() {
               Товары
             </Link>
             <button
+              onClick={() => setOrdersHistoryOpen(true)}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              История заказов
+            </button>
+            <button
               onClick={logout}
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
             >
@@ -180,13 +210,13 @@ export default function CashierPage() {
           <div className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
             Загрузка...
           </div>
-        ) : orders.length === 0 ? (
+        ) : activeOrders.length === 0 ? (
           <div className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
             Пока нет заказов.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {orders.map((order) => (
+            {activeOrders.map((order) => (
               <div
                 key={order.id}
                 className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]"
@@ -200,7 +230,7 @@ export default function CashierPage() {
                       {order.total_amount.toLocaleString("ru-RU")} сум
                     </p>
                     <p className="text-sm text-[var(--muted)]">
-                      Статус: {order.status}
+                      Статус: {statusLabels[order.status] ?? order.status}
                     </p>
                   </div>
                   <div className="text-right text-sm text-[var(--muted)]">
@@ -211,9 +241,7 @@ export default function CashierPage() {
                 </div>
 
                 <div className="mt-4 rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm">
-                  <p className="font-semibold text-[var(--ink)]">
-                    Адрес доставки
-                  </p>
+                  <p className="font-semibold text-[var(--ink)]">Адрес доставки</p>
                   <p className="text-[var(--muted)]">
                     {order.address_label ? `${order.address_label} · ` : ""}
                     {order.address_line ?? "—"}
@@ -254,9 +282,7 @@ export default function CashierPage() {
                       onChange={(event) =>
                         assignCourier(
                           order.id,
-                          event.target.value
-                            ? Number(event.target.value)
-                            : null
+                          event.target.value ? Number(event.target.value) : null
                         )
                       }
                       className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm"
@@ -265,10 +291,31 @@ export default function CashierPage() {
                       {couriers.map((courier) => (
                         <option key={courier.id} value={courier.id}>
                           {courier.name}
+                          {courier.phone ? ` · ${courier.phone}` : ""}
+                          {courier.car_number ? ` · ${courier.car_number}` : ""}
                         </option>
                       ))}
                     </select>
                   </label>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {order.status === "paid" ? (
+                    <button
+                      onClick={() => setOrderStatus(order.id, "accepted")}
+                      className="rounded-2xl bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow)] transition hover:-translate-y-[1px] hover:bg-[#9f5b33]"
+                    >
+                      Принять заказ
+                    </button>
+                  ) : null}
+                  {order.status === "accepted" || order.status === "in_delivery" ? (
+                    <button
+                      onClick={() => setOrderStatus(order.id, "completed")}
+                      className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+                    >
+                      Доставлен
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -362,6 +409,62 @@ export default function CashierPage() {
         </div>
       ) : null}
 
+      {ordersHistoryOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 py-10">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setOrdersHistoryOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-4xl rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-extrabold text-[var(--ink)]">
+                История заказов
+              </h3>
+              <button
+                onClick={() => setOrdersHistoryOpen(false)}
+                className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm"
+              >
+                Закрыть
+              </button>
+            </div>
+            {completedOrders.length === 0 ? (
+              <div className="rounded-2xl border border-[var(--stroke)] bg-white p-4 text-sm text-[var(--muted)]">
+                История пока пустая.
+              </div>
+            ) : (
+              <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
+                {completedOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--ink)]">
+                          Заказ #{order.id} ·{" "}
+                          {order.total_amount.toLocaleString("ru-RU")} сум
+                        </p>
+                        <p className="text-xs text-[var(--muted)]">
+                          {order.customer_name ?? "Гость"} ·{" "}
+                          {order.customer_phone ?? "—"}
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+                        {statusLabels[order.status] ?? order.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-[var(--muted)]">
+                      {order.address_label ? `${order.address_label} · ` : ""}
+                      {order.address_line ?? "—"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       {historyOpen ? (
         <div className="fixed inset-0 z-50">
           <div
@@ -395,12 +498,10 @@ export default function CashierPage() {
                     >
                       <div>
                         <p className="text-sm font-semibold text-[var(--ink)]">
-                          Заказ #{order.id} ·{" "}
-                          {order.total_amount.toLocaleString("ru-RU")} сум
+                          Заказ #{order.id} · {order.total_amount.toLocaleString("ru-RU")} сум
                         </p>
                         <p className="text-xs text-[var(--muted)]">
-                          {order.customer_name ?? "Гость"} ·{" "}
-                          {order.customer_phone ?? "—"}
+                          {order.customer_name ?? "Гость"} · {order.customer_phone ?? "—"}
                         </p>
                       </div>
                       <button

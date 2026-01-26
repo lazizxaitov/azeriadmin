@@ -134,6 +134,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     phone TEXT,
+    car_number TEXT,
+    comment TEXT,
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -217,6 +219,8 @@ ensureColumn("orders", "comment", "TEXT");
 ensureColumn("orders", "bonus_used", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "bonus_earned", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "courier_id", "INTEGER");
+ensureColumn("couriers", "car_number", "TEXT");
+ensureColumn("couriers", "comment", "TEXT");
 ensureColumn("settings", "bonus_redeem_amount", "INTEGER NOT NULL DEFAULT 25000");
 
 function tableHasRows(table: string) {

@@ -14,6 +14,7 @@ const navItems = [
   { href: "/admin/products", label: "Товары", icon: "🍰" },
   { href: "/admin/top-products", label: "Топ", icon: "⭐" },
   { href: "/admin/customers", label: "Клиенты", icon: "👥" },
+  { href: "/admin/couriers", label: "Доставщики", icon: "🚚" },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -116,8 +117,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
 
-      <nav className="fixed bottom-4 left-1/2 z-20 w-[min(92vw,640px)] -translate-x-1/2 rounded-[28px] border border-[var(--stroke)] bg-[var(--surface)] p-2 shadow-[var(--shadow)]">
-        <div className="grid grid-cols-6 gap-2">
+      <nav className="fixed bottom-4 left-1/2 z-20 w-[min(92vw,720px)] -translate-x-1/2 rounded-[28px] border border-[var(--stroke)] bg-[var(--surface)] p-2 shadow-[var(--shadow)]">
+        <div className="grid grid-cols-7 gap-2">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (

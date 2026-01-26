@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -27,6 +27,8 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const name = body?.name?.toString()?.trim();
   const phone = body?.phone?.toString()?.trim() ?? null;
+  const carNumber = body?.carNumber?.toString()?.trim() ?? null;
+  const comment = body?.comment?.toString()?.trim() ?? null;
   const isActive = body?.isActive === false ? 0 : 1;
 
   if (!name) {
@@ -37,9 +39,9 @@ export async function POST(request: Request) {
   const now = nowIso();
   const result = db
     .prepare(
-      "INSERT INTO couriers (name, phone, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
+      "INSERT INTO couriers (name, phone, car_number, comment, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
-    .run(name, phone, isActive, now, now);
+    .run(name, phone, carNumber, comment, isActive, now, now);
 
   return NextResponse.json({ id: result.lastInsertRowid });
 }
