@@ -5,12 +5,14 @@ import { ReactNode } from "react";
 export function Card({
   children,
   className = "",
-}: {
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
   className?: string;
 }) {
   return (
     <div
+      {...props}
       className={`rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)] ${className}`}
     >
       {children}
