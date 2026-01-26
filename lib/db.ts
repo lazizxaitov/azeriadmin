@@ -112,6 +112,10 @@ db.exec(`
     bonus_used INTEGER NOT NULL DEFAULT 0,
     bonus_earned INTEGER NOT NULL DEFAULT 0,
     courier_id INTEGER,
+    accepted_at TEXT,
+    in_delivery_at TEXT,
+    completed_at TEXT,
+    canceled_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (customer_id) REFERENCES customers(id),
@@ -220,6 +224,10 @@ ensureColumn("orders", "comment", "TEXT");
 ensureColumn("orders", "bonus_used", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "bonus_earned", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "courier_id", "INTEGER");
+ensureColumn("orders", "accepted_at", "TEXT");
+ensureColumn("orders", "in_delivery_at", "TEXT");
+ensureColumn("orders", "completed_at", "TEXT");
+ensureColumn("orders", "canceled_at", "TEXT");
 ensureColumn("couriers", "car_number", "TEXT");
 ensureColumn("couriers", "comment", "TEXT");
 ensureColumn("settings", "bonus_percent", "REAL NOT NULL DEFAULT 0");

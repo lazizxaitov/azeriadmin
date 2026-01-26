@@ -20,27 +20,71 @@ export async function PUT(
   }
 
   const body = await request.json().catch(() => null);
-  const courierId = body?.courierId ? Number(body.courierId) : null;
-  const status = body?.status?.toString()?.trim() ?? "paid";
+  const courierId =
+    body?.courierId === undefined || body?.courierId === null
+      ? undefined
+      : body?.courierId
+        ? Number(body.courierId)
+        : null;
+  const nextStatus = body?.status?.toString()?.trim();
 
   const db = getDb();
   const now = nowIso();
   const update = db.transaction(() => {
     const order = db
       .prepare(
-        "SELECT id, customer_id, total_amount, status, bonus_earned FROM orders WHERE id = ?"
+        "SELECT id, customer_id, total_amount, status, bonus_earned, courier_id, accepted_at, in_delivery_at, completed_at, canceled_at FROM orders WHERE id = ?"
       )
       .get(id) as
-      | { id: number; customer_id: number | null; total_amount: number; status: string; bonus_earned: number }
+      | {
+          id: number;
+          customer_id: number | null;
+          total_amount: number;
+          status: string;
+          bonus_earned: number;
+          courier_id: number | null;
+          accepted_at: string | null;
+          in_delivery_at: string | null;
+          completed_at: string | null;
+          canceled_at: string | null;
+        }
       | undefined;
 
     if (!order?.id) {
       return { ok: false, status: 404 as const };
     }
 
+    const status = nextStatus ?? order.status;
+    const resolvedCourierId = courierId === undefined ? order.courier_id ?? null : courierId;
+    const updateFields: string[] = ["courier_id = ?", "status = ?", "updated_at = ?"];
+    const updateParams: Array<string | number | null> = [
+      resolvedCourierId,
+      status,
+      now,
+    ];
+
+    if (status === "accepted" && !order.accepted_at) {
+      updateFields.push("accepted_at = ?");
+      updateParams.push(now);
+    }
+    if (status === "in_delivery" && !order.in_delivery_at) {
+      updateFields.push("in_delivery_at = ?");
+      updateParams.push(now);
+    }
+    if (status === "completed" && !order.completed_at) {
+      updateFields.push("completed_at = ?");
+      updateParams.push(now);
+    }
+    if (status === "canceled" && !order.canceled_at) {
+      updateFields.push("canceled_at = ?");
+      updateParams.push(now);
+    }
+
+    updateParams.push(id);
+
     db.prepare(
-      "UPDATE orders SET courier_id = ?, status = ?, updated_at = ? WHERE id = ?"
-    ).run(courierId, status, now, id);
+      `UPDATE orders SET ${updateFields.join(", ")} WHERE id = ?`
+    ).run(...updateParams);
 
     if (
       status === "completed" &&

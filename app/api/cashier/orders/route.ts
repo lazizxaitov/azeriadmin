@@ -16,7 +16,7 @@ export async function GET() {
     .prepare(
       `SELECT o.*, c.name as customer_name, c.phone as customer_phone,
         ca.address_line, ca.comment as address_comment, ca.label as address_label,
-        cr.name as courier_name
+        cr.name as courier_name, cr.phone as courier_phone, cr.car_number as courier_car_number
        FROM orders o
        LEFT JOIN customers c ON c.id = o.customer_id
        LEFT JOIN customer_addresses ca ON ca.id = o.customer_address_id

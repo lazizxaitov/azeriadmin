@@ -122,7 +122,7 @@ export default function CashierPage() {
     await fetch(`/api/cashier/orders/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courierId, status: "in_delivery" }),
+      body: JSON.stringify({ courierId }),
     });
     load();
   };
@@ -314,7 +314,16 @@ export default function CashierPage() {
                       </button>
                     </>
                   ) : null}
-                  {order.status === "accepted" || order.status === "in_delivery" ? (
+                  {order.status === "accepted" ? (
+                    <button
+                      onClick={() => setOrderStatus(order.id, "in_delivery")}
+                      disabled={!order.courier_id}
+                      className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Доставляется
+                    </button>
+                  ) : null}
+                  {order.status === "in_delivery" ? (
                     <button
                       onClick={() => setOrderStatus(order.id, "completed")}
                       className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
@@ -323,6 +332,11 @@ export default function CashierPage() {
                     </button>
                   ) : null}
                 </div>
+                {order.status === "accepted" && !order.courier_id ? (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Выберите доставщика, чтобы начать доставку.
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
