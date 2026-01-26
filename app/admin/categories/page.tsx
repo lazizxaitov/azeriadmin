@@ -254,7 +254,7 @@ export default function CategoriesPage() {
       <ImageCropper
         open={cropOpen && Boolean(cropSrc)}
         imageSrc={cropSrc ?? ""}
-        aspect={176 / 81.4}
+        aspect={3 / 2}
         title="Обрезка категории"
         onCancel={() => {
           setCropOpen(false);
