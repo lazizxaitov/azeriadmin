@@ -17,7 +17,7 @@ export async function GET() {
 
   const db = getDb();
   const items = db
-    .prepare("SELECT * FROM categories ORDER BY name_ru ASC")
+    .prepare("SELECT * FROM categories ORDER BY sort_order ASC, created_at DESC")
     .all();
   return NextResponse.json({ items });
 }

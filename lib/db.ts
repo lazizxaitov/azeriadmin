@@ -20,6 +20,7 @@ db.exec(`
     name_uz TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     image_url TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -112,6 +113,7 @@ db.exec(`
     bonus_used INTEGER NOT NULL DEFAULT 0,
     bonus_earned INTEGER NOT NULL DEFAULT 0,
     courier_id INTEGER,
+    payment_method TEXT,
     accepted_at TEXT,
     in_delivery_at TEXT,
     completed_at TEXT,
@@ -230,11 +232,13 @@ function ensureColumn(table: string, column: string, type: string) {
 
 ensureColumn("customers", "password", "TEXT");
 ensureColumn("customers", "bonus_balance", "INTEGER NOT NULL DEFAULT 0");
+ensureColumn("categories", "sort_order", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "customer_address_id", "INTEGER");
 ensureColumn("orders", "comment", "TEXT");
 ensureColumn("orders", "bonus_used", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "bonus_earned", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "courier_id", "INTEGER");
+ensureColumn("orders", "payment_method", "TEXT");
 ensureColumn("orders", "accepted_at", "TEXT");
 ensureColumn("orders", "in_delivery_at", "TEXT");
 ensureColumn("orders", "completed_at", "TEXT");

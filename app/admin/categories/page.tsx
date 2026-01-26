@@ -17,6 +17,7 @@ type Category = {
   name_uz: string;
   slug: string;
   image_url?: string | null;
+  sort_order?: number | null;
 };
 
 export default function CategoriesPage() {
@@ -104,6 +105,45 @@ export default function CategoriesPage() {
     load();
   };
 
+  const moveCategory = async (id: number, direction: "up" | "down") => {
+    const index = items.findIndex((item) => item.id === id);
+    if (index < 0) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    const current = items[index];
+    const target = items[targetIndex];
+    const currentOrder = Number(current.sort_order ?? 0);
+    const targetOrder = Number(target.sort_order ?? 0);
+
+    await Promise.all([
+      fetch(`/api/categories/${current.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nameRu: current.name_ru,
+          nameUz: current.name_uz,
+          slug: current.slug,
+          imageUrl: current.image_url ?? null,
+          sortOrder: targetOrder,
+        }),
+      }),
+      fetch(`/api/categories/${target.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nameRu: target.name_ru,
+          nameUz: target.name_uz,
+          slug: target.slug,
+          imageUrl: target.image_url ?? null,
+          sortOrder: currentOrder,
+        }),
+      }),
+    ]);
+
+    load();
+  };
+
   return (
     <div className="space-y-8">
       <SectionTitle
@@ -158,6 +198,14 @@ export default function CategoriesPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <GhostButton onClick={() => moveCategory(item.id, "up")}>
+                      ↑
+                    </GhostButton>
+                    <GhostButton onClick={() => moveCategory(item.id, "down")}>
+                      ↓
+                    </GhostButton>
+                  </div>
                   <GhostButton onClick={() => startEdit(item)}>Ред.</GhostButton>
                   <GhostButton onClick={() => remove(item.id)}>Удал.</GhostButton>
                 </div>
