@@ -51,7 +51,6 @@ export default function CashierPage() {
   const [newOrder, setNewOrder] = useState<Order | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [ordersHistoryOpen, setOrdersHistoryOpen] = useState(false);
   const [notifications, setNotifications] = useState<Order[]>([]);
   const seenIdsRef = useRef<Set<number>>(new Set());
   const initializedRef = useRef(false);
@@ -150,7 +149,6 @@ export default function CashierPage() {
   const activeOrders = orders.filter(
     (order) => order.status !== "completed" && order.status !== "canceled"
   );
-  const completedOrders = orders.filter((order) => order.status === "completed");
 
   return (
     <div className="min-h-screen grainy px-6 py-8">
@@ -191,12 +189,12 @@ export default function CashierPage() {
             >
               Товары
             </Link>
-            <button
-              onClick={() => setOrdersHistoryOpen(true)}
+            <Link
+              href="/cashier/history"
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
             >
               История заказов
-            </button>
+            </Link>
             <button
               onClick={logout}
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
@@ -405,62 +403,6 @@ export default function CashierPage() {
                 </span>
               </div>
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {ordersHistoryOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 py-10">
-          <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={() => setOrdersHistoryOpen(false)}
-          />
-          <div className="relative z-10 w-full max-w-4xl rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-extrabold text-[var(--ink)]">
-                История заказов
-              </h3>
-              <button
-                onClick={() => setOrdersHistoryOpen(false)}
-                className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm"
-              >
-                Закрыть
-              </button>
-            </div>
-            {completedOrders.length === 0 ? (
-              <div className="rounded-2xl border border-[var(--stroke)] bg-white p-4 text-sm text-[var(--muted)]">
-                История пока пустая.
-              </div>
-            ) : (
-              <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
-                {completedOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-[var(--ink)]">
-                          Заказ #{order.id} ·{" "}
-                          {order.total_amount.toLocaleString("ru-RU")} сум
-                        </p>
-                        <p className="text-xs text-[var(--muted)]">
-                          {order.customer_name ?? "Гость"} ·{" "}
-                          {order.customer_phone ?? "—"}
-                        </p>
-                      </div>
-                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
-                        {statusLabels[order.status] ?? order.status}
-                      </span>
-                    </div>
-                    <div className="mt-2 text-xs text-[var(--muted)]">
-                      {order.address_label ? `${order.address_label} · ` : ""}
-                      {order.address_line ?? "—"}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       ) : null}

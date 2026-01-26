@@ -150,6 +150,7 @@ db.exec(`
     delivery_fee INTEGER NOT NULL DEFAULT 0,
     min_order INTEGER NOT NULL DEFAULT 0,
     currency TEXT NOT NULL DEFAULT 'сум',
+    bonus_percent REAL NOT NULL DEFAULT 0,
     bonus_redeem_amount INTEGER NOT NULL DEFAULT 25000,
     instagram TEXT,
     telegram TEXT,
@@ -221,6 +222,7 @@ ensureColumn("orders", "bonus_earned", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "courier_id", "INTEGER");
 ensureColumn("couriers", "car_number", "TEXT");
 ensureColumn("couriers", "comment", "TEXT");
+ensureColumn("settings", "bonus_percent", "REAL NOT NULL DEFAULT 0");
 ensureColumn("settings", "bonus_redeem_amount", "INTEGER NOT NULL DEFAULT 25000");
 
 function tableHasRows(table: string) {
@@ -313,8 +315,8 @@ const settingsRow = db
 if (!settingsRow?.id) {
   db.prepare(
     `INSERT INTO settings
-     (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_redeem_amount, instagram, telegram, updated_at)
-     VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 25000, '', '', ?)`
+     (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_percent, bonus_redeem_amount, instagram, telegram, updated_at)
+     VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 0, 25000, '', '', ?)`
   ).run(nowIso());
 }
 

@@ -12,6 +12,7 @@ type Settings = {
   delivery_fee: number;
   min_order: number;
   currency: string;
+  bonus_percent: number;
   bonus_redeem_amount: number;
   instagram: string;
   telegram: string;
@@ -57,6 +58,7 @@ export default function SettingsPage() {
     delivery_fee: 0,
     min_order: 0,
     currency: "сум",
+    bonus_percent: 0,
     bonus_redeem_amount: 25000,
     instagram: "",
     telegram: "",
@@ -112,6 +114,7 @@ export default function SettingsPage() {
         deliveryFee: Number(form.delivery_fee),
         minOrder: Number(form.min_order),
         currency: form.currency,
+        bonusPercent: Number(form.bonus_percent),
         bonusRedeemAmount: Number(form.bonus_redeem_amount),
         instagram: form.instagram,
         telegram: form.telegram,
@@ -251,7 +254,7 @@ export default function SettingsPage() {
             </label>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-4">
+          <div className="mt-4 grid gap-4 md:grid-cols-5">
             <label className="text-sm font-semibold">
               Доставка (сум)
               <input
@@ -286,6 +289,20 @@ export default function SettingsPage() {
                 value={form.currency}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, currency: event.target.value }))
+                }
+                className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+              />
+            </label>
+            <label className="text-sm font-semibold">
+              Бонус процент (%)
+              <input
+                type="number"
+                value={form.bonus_percent}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    bonus_percent: Number(event.target.value),
+                  }))
                 }
                 className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
               />
