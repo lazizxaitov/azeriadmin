@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     .toString(16)
     .slice(2)}${ext}`;
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = path.join(process.cwd(), "data", "uploads");
   await fs.mkdir(uploadDir, { recursive: true });
   const filePath = path.join(uploadDir, filename);
   await fs.writeFile(filePath, buffer);
