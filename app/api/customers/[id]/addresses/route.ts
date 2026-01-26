@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -6,15 +6,15 @@ import { getSession } from "@/lib/auth";
 export const runtime = "nodejs";
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const customerId = Number(params.id);
+  const customerId = Number((await params).id);
   if (!customerId) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }

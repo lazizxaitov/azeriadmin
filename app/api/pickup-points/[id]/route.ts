@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -6,15 +6,15 @@ import { getSession } from "@/lib/auth";
 export const runtime = "nodejs";
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const pointId = Number(params.id);
+  const pointId = Number((await params).id);
   if (!Number.isFinite(pointId)) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
@@ -50,15 +50,15 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const pointId = Number(params.id);
+  const pointId = Number((await params).id);
   if (!Number.isFinite(pointId)) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }

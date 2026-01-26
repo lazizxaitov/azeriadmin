@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
@@ -6,8 +6,8 @@ import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authError = requirePublicApiKey();
   if (authError) {
@@ -18,7 +18,7 @@ export async function GET(
     return NextResponse.json({ error: rateError.message }, { status: rateError.status });
   }
 
-  const customerId = Number(params.id);
+  const customerId = Number((await params).id);
   if (!Number.isFinite(customerId)) {
     return NextResponse.json({ error: "Invalid customer id" }, { status: 400 });
   }
@@ -38,8 +38,8 @@ export async function GET(
 }
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authError = requirePublicApiKey();
   if (authError) {
@@ -50,7 +50,7 @@ export async function PATCH(
     return NextResponse.json({ error: rateError.message }, { status: rateError.status });
   }
 
-  const customerId = Number(params.id);
+  const customerId = Number((await params).id);
   if (!Number.isFinite(customerId)) {
     return NextResponse.json({ error: "Invalid customer id" }, { status: 400 });
   }

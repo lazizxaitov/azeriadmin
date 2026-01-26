@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
@@ -6,8 +6,8 @@ import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 export const runtime = "nodejs";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authError = requirePublicApiKey();
   if (authError) {
@@ -18,7 +18,7 @@ export async function GET(
     return NextResponse.json({ error: rateError.message }, { status: rateError.status });
   }
 
-  const categoryId = Number(params.id);
+  const categoryId = Number((await params).id);
   if (!categoryId) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
