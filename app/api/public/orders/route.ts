@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
@@ -24,8 +24,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
+  const customerIdInput = body?.customerId ? Number(body.customerId) : null;
   const customerName = body?.customerName?.toString()?.trim();
-  const customerPhone = body?.customerPhone?.toString()?.trim() ?? null;
+  let customerPhone = body?.customerPhone?.toString()?.trim() ?? null;
   const addressId = body?.addressId ? Number(body.addressId) : null;
   const addressLine = body?.addressLine?.toString()?.trim();
   const addressLabel = body?.addressLabel?.toString()?.trim() ?? null;
@@ -38,7 +39,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing items" }, { status: 400 });
   }
 
-  if (bonusUsedRequested > 0 && !customerName && !customerPhone) {
+  if (customerPhone && !customerPhone.startsWith("+998")) {
+    customerPhone = `+998${customerPhone.replace(/^\+?998/, "")}`;
+  }
+
+  if (bonusUsedRequested > 0 && !customerIdInput && !customerName && !customerPhone) {
     return NextResponse.json({ error: "Bonus requires customer" }, { status: 400 });
   }
 
@@ -48,7 +53,47 @@ export async function POST(request: Request) {
     let customerId: number | null = null;
     let customerAddressId: number | null = addressId;
     let bonusUsed = 0;
-    if (customerName) {
+
+    if (customerIdInput) {
+      const existing = db
+        .prepare("SELECT id, name, phone, bonus_balance FROM customers WHERE id = ?")
+        .get(customerIdInput) as
+        | { id?: number; name?: string; phone?: string | null; bonus_balance?: number }
+        | undefined;
+
+      if (!existing?.id) {
+        throw new Error("CUSTOMER_NOT_FOUND");
+      }
+
+      customerId = existing.id;
+
+      if (customerName || customerPhone) {
+        db.prepare("UPDATE customers SET name = ?, phone = ?, updated_at = ? WHERE id = ?").run(
+          customerName ?? existing.name ?? "",
+          customerPhone ?? existing.phone ?? null,
+          now,
+          customerId
+        );
+      }
+
+      if (bonusUsedRequested > 0) {
+        const current = Number(existing.bonus_balance ?? 0);
+        bonusUsed = Math.max(0, Math.min(current, bonusUsedRequested));
+        const nextBalance = current - bonusUsed;
+        db.prepare("UPDATE customers SET bonus_balance = ?, updated_at = ? WHERE id = ?").run(
+          nextBalance,
+          now,
+          customerId
+        );
+        if (bonusUsed > 0) {
+          db.prepare(
+            `INSERT INTO bonus_transactions
+             (customer_id, delta, balance_after, reason, order_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?)`
+          ).run(customerId, -bonusUsed, nextBalance, "Order payment", null, now);
+        }
+      }
+    } else if (customerName) {
       if (customerPhone) {
         const existing = db
           .prepare("SELECT id, bonus_balance FROM customers WHERE phone = ?")
@@ -141,6 +186,13 @@ export async function POST(request: Request) {
     return orderId;
   });
 
-  const orderId = create();
-  return NextResponse.json({ id: orderId });
+  try {
+    const orderId = create();
+    return NextResponse.json({ id: orderId });
+  } catch (error) {
+    if (error instanceof Error && error.message === "CUSTOMER_NOT_FOUND") {
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    }
+    throw error;
+  }
 }

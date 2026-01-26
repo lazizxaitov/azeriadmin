@@ -259,6 +259,21 @@ Notes:
 { "id": 1 }
 ```
 
+### 9.1) Customer login
+**POST** `/api/public/auth/login`
+
+**Headers:** `x-api-key: <MOBILE_API_KEY>`
+
+**Body:**
+```json
+{ "phone": "+998901234567", "password": "1234" }
+```
+
+**Response:**
+```json
+{ "item": { "id": 1, "name": "Ali", "phone": "+998901234567" } }
+```
+
 ### 10) Get customer profile
 **GET** `/api/public/customers/:id/profile`
 
@@ -311,6 +326,7 @@ Notes:
 **Body:**
 ```json
 {
+  "customerId": 1,
   "customerName": "Ali",
   "customerPhone": "+998901234567",
   "addressId": 10,
