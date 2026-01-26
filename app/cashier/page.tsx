@@ -39,7 +39,7 @@ const statusLabels: Record<string, string> = {
   accepted: "Принят",
   in_delivery: "В доставке",
   completed: "Доставлен",
-  canceled: "Отменён",
+  canceled: "Не принят",
 };
 
 export default function CashierPage() {
@@ -299,12 +299,20 @@ export default function CashierPage() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {order.status === "paid" ? (
-                    <button
-                      onClick={() => setOrderStatus(order.id, "accepted")}
-                      className="rounded-2xl bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow)] transition hover:-translate-y-[1px] hover:bg-[#9f5b33]"
-                    >
-                      Принять заказ
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setOrderStatus(order.id, "accepted")}
+                        className="rounded-2xl bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow)] transition hover:-translate-y-[1px] hover:bg-[#9f5b33]"
+                      >
+                        Принять заказ
+                      </button>
+                      <button
+                        onClick={() => setOrderStatus(order.id, "canceled")}
+                        className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+                      >
+                        Не принять
+                      </button>
+                    </>
                   ) : null}
                   {order.status === "accepted" || order.status === "in_delivery" ? (
                     <button
