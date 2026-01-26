@@ -26,6 +26,7 @@ export default function CategoriesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [cropOpen, setCropOpen] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropType, setCropType] = useState<string>("image/jpeg");
   const [form, setForm] = useState({
     nameRu: "",
     nameUz: "",
@@ -227,6 +228,7 @@ export default function CategoriesPage() {
                   const reader = new FileReader();
                   reader.onload = () => {
                     setCropSrc(reader.result as string);
+                    setCropType(file.type || "image/jpeg");
                     setCropOpen(true);
                   };
                   reader.readAsDataURL(file);
@@ -258,6 +260,7 @@ export default function CategoriesPage() {
           setCropOpen(false);
           setCropSrc(null);
         }}
+        outputType={cropType}
         onConfirm={async (file) => {
           const url = await uploadImage(file);
           setForm((prev) => ({ ...prev, imageUrl: url }));

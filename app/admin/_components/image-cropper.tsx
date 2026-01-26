@@ -10,6 +10,7 @@ type Props = {
   imageSrc: string;
   aspect: number;
   title: string;
+  outputType?: string;
   onCancel: () => void;
   onConfirm: (file: File) => void;
 };
@@ -24,7 +25,18 @@ function createImage(url: string) {
   });
 }
 
-async function getCroppedFile(imageSrc: string, crop: Area) {
+function getOutputMeta(outputType?: string) {
+  const type = outputType ?? "image/jpeg";
+  if (type === "image/png") {
+    return { type, ext: "png", quality: undefined as number | undefined };
+  }
+  if (type === "image/webp") {
+    return { type, ext: "webp", quality: 0.92 };
+  }
+  return { type: "image/jpeg", ext: "jpg", quality: 0.92 };
+}
+
+async function getCroppedFile(imageSrc: string, crop: Area, outputType?: string) {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -44,14 +56,18 @@ async function getCroppedFile(imageSrc: string, crop: Area) {
     crop.height
   );
 
+  const meta = getOutputMeta(outputType);
+
   return new Promise<File>((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
         reject(new Error("Canvas is empty"));
         return;
       }
-      resolve(new File([blob], `crop-${Date.now()}.jpg`, { type: "image/jpeg" }));
-    }, "image/jpeg", 0.92);
+      resolve(
+        new File([blob], `crop-${Date.now()}.${meta.ext}`, { type: meta.type })
+      );
+    }, meta.type, meta.quality);
   });
 }
 
@@ -60,6 +76,7 @@ export default function ImageCropper({
   imageSrc,
   aspect,
   title,
+  outputType,
   onCancel,
   onConfirm,
 }: Props) {
@@ -116,7 +133,11 @@ export default function ImageCropper({
             onClick={async () => {
               if (!croppedAreaPixels) return;
               setSaving(true);
-              const file = await getCroppedFile(imageSrc, croppedAreaPixels);
+              const file = await getCroppedFile(
+                imageSrc,
+                croppedAreaPixels,
+                outputType
+              );
               onConfirm(file);
               setSaving(false);
             }}
