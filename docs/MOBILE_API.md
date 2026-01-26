@@ -126,7 +126,23 @@ Use this endpoint after login to restore saved addresses.
 
 **Response:**
 ```json
-{ "items": [ { "id": 5001, "total_amount": 170000, "status": "paid", "created_at": "2026-01-23T10:00:00.000Z", "items": [ ... ] } ] }
+{
+  "items": [
+    {
+      "id": 5001,
+      "total_amount": 170000,
+      "status": "paid",
+      "created_at": "2026-01-23T10:00:00.000Z",
+      "courier": {
+        "id": 3,
+        "name": "Ali Qosimov",
+        "phone": "+998901112233",
+        "car_number": "01 A123BC"
+      },
+      "items": [ ... ]
+    }
+  ]
+}
 ```
 
 Use this endpoint after login to restore order history.

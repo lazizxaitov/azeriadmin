@@ -26,10 +26,13 @@ export async function GET(
   const db = getDb();
   const orders = db
     .prepare(
-      `SELECT id, customer_id, customer_address_id, total_amount, status, comment, bonus_used, bonus_earned, created_at
-       FROM orders
-       WHERE customer_id = ?
-       ORDER BY created_at DESC`
+      `SELECT o.id, o.customer_id, o.customer_address_id, o.total_amount, o.status, o.comment,
+              o.bonus_used, o.bonus_earned, o.created_at,
+              cr.id as courier_id, cr.name as courier_name, cr.phone as courier_phone, cr.car_number as courier_car_number
+       FROM orders o
+       LEFT JOIN couriers cr ON cr.id = o.courier_id
+       WHERE o.customer_id = ?
+       ORDER BY o.created_at DESC`
     )
     .all(customerId) as Array<{
     id: number;
@@ -41,6 +44,10 @@ export async function GET(
     bonus_used: number;
     bonus_earned: number;
     created_at: string;
+    courier_id: number | null;
+    courier_name: string | null;
+    courier_phone: string | null;
+    courier_car_number: string | null;
   }>;
 
   if (!orders.length) {
@@ -108,6 +115,14 @@ export async function GET(
     bonus_used: order.bonus_used,
     bonus_earned: order.bonus_earned,
     created_at: order.created_at,
+    courier: order.courier_id
+      ? {
+          id: order.courier_id,
+          name: order.courier_name,
+          phone: order.courier_phone,
+          car_number: order.courier_car_number,
+        }
+      : null,
     address: order.customer_address_id
       ? addressMap.get(order.customer_address_id) ?? null
       : null,
