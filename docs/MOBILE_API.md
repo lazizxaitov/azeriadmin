@@ -1,4 +1,4 @@
-# Mobile Auth + Customer Linking (Only)
+﻿# Mobile Auth + Customer Linking (Only)
 
 This short doc covers **registration, login, and order linking** so the mobile team can integrate without confusion.
 
@@ -118,5 +118,31 @@ Notes:
 ```
 
 Use this endpoint after login to restore saved addresses.
+
+---
+
+## 6) Order history
+**GET** `/api/public/customers/:id/orders`
+
+**Response:**
+```json
+{ "items": [ { "id": 5001, "total_amount": 170000, "status": "paid", "created_at": "2026-01-23T10:00:00.000Z", "items": [ ... ] } ] }
+```
+
+Use this endpoint after login to restore order history.
+
+---
+
+## 7) Bonus balance + history
+**GET** `/api/public/customers/:id/bonuses`
+
+**Response:**
+```json
+{ "balance": 25000, "transactions": [ { "id": 10, "delta": -5000, "balance_after": 20000, "reason": "Order payment", "order_id": 5001, "created_at": "2026-01-25T12:00:00.000Z" } ] }
+```
+
+Use this endpoint after login to restore bonus balance/history.
+
+---
 
 If you need password change or refresh token endpoints, tell me and I’ll add them.
