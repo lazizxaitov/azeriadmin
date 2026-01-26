@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -33,6 +33,7 @@ export async function PUT(request: Request) {
   const deliveryFee = Number(body?.deliveryFee ?? 0);
   const minOrder = Number(body?.minOrder ?? 0);
   const currency = body?.currency?.toString()?.trim() ?? "сум";
+  const bonusRedeemAmount = Number(body?.bonusRedeemAmount ?? 25000);
   const instagram = body?.instagram?.toString()?.trim() ?? "";
   const telegram = body?.telegram?.toString()?.trim() ?? "";
 
@@ -43,7 +44,7 @@ export async function PUT(request: Request) {
   const db = getDb();
   db.prepare(
     `UPDATE settings
-     SET cafe_name = ?, phone = ?, address = ?, work_hours = ?, delivery_fee = ?, min_order = ?, currency = ?, instagram = ?, telegram = ?, updated_at = ?
+     SET cafe_name = ?, phone = ?, address = ?, work_hours = ?, delivery_fee = ?, min_order = ?, currency = ?, bonus_redeem_amount = ?, instagram = ?, telegram = ?, updated_at = ?
      WHERE id = 1`
   ).run(
     cafeName,
@@ -53,6 +54,7 @@ export async function PUT(request: Request) {
     deliveryFee,
     minOrder,
     currency,
+    bonusRedeemAmount,
     instagram,
     telegram,
     nowIso()

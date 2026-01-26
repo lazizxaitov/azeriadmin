@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
-import { Card, SectionTitle, PrimaryButton, GhostButton } from "../_components/ui";
+import { Card, SectionTitle, PrimaryButton, GhostButton, Modal } from "../_components/ui";
 
 type Settings = {
   cafe_name: string;
@@ -12,8 +12,40 @@ type Settings = {
   delivery_fee: number;
   min_order: number;
   currency: string;
+  bonus_redeem_amount: number;
   instagram: string;
   telegram: string;
+};
+
+type PickupPoint = {
+  id: number;
+  title: string;
+  address: string;
+  phone: string | null;
+  work_hours: string | null;
+  lat: number | null;
+  lng: number | null;
+  is_active: number;
+};
+
+type PickupPointForm = {
+  title: string;
+  address: string;
+  phone: string;
+  work_hours: string;
+  lat: string;
+  lng: string;
+  is_active: boolean;
+};
+
+const emptyPointForm: PickupPointForm = {
+  title: "",
+  address: "",
+  phone: "",
+  work_hours: "",
+  lat: "",
+  lng: "",
+  is_active: true,
 };
 
 export default function SettingsPage() {
@@ -25,6 +57,7 @@ export default function SettingsPage() {
     delivery_fee: 0,
     min_order: 0,
     currency: "сум",
+    bonus_redeem_amount: 25000,
     instagram: "",
     telegram: "",
   });
@@ -32,16 +65,33 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  const [points, setPoints] = useState<PickupPoint[]>([]);
+  const [pointsLoading, setPointsLoading] = useState(true);
+  const [pointModalOpen, setPointModalOpen] = useState(false);
+  const [pointSaving, setPointSaving] = useState(false);
+  const [pointForm, setPointForm] = useState<PickupPointForm>(emptyPointForm);
+  const [editingPointId, setEditingPointId] = useState<number | null>(null);
+
   const load = () => {
     setLoading(true);
-    fetch("/api/settings")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.item) {
-          setForm(data.item);
+    setPointsLoading(true);
+    Promise.all([fetch("/api/settings"), fetch("/api/pickup-points")])
+      .then(async ([settingsRes, pointsRes]) => {
+        const settingsData = await settingsRes.json();
+        const pointsData = await pointsRes.json();
+        if (settingsData?.item) {
+          setForm(settingsData.item);
+        }
+        if (Array.isArray(pointsData?.items)) {
+          setPoints(pointsData.items);
+        } else {
+          setPoints([]);
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setPointsLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -62,6 +112,7 @@ export default function SettingsPage() {
         deliveryFee: Number(form.delivery_fee),
         minOrder: Number(form.min_order),
         currency: form.currency,
+        bonusRedeemAmount: Number(form.bonus_redeem_amount),
         instagram: form.instagram,
         telegram: form.telegram,
       }),
@@ -86,6 +137,61 @@ export default function SettingsPage() {
     link.remove();
     window.URL.revokeObjectURL(url);
     setDownloading(false);
+  };
+
+  const openNewPoint = () => {
+    setEditingPointId(null);
+    setPointForm(emptyPointForm);
+    setPointModalOpen(true);
+  };
+
+  const openEditPoint = (point: PickupPoint) => {
+    setEditingPointId(point.id);
+    setPointForm({
+      title: point.title,
+      address: point.address,
+      phone: point.phone ?? "",
+      work_hours: point.work_hours ?? "",
+      lat: point.lat !== null && point.lat !== undefined ? String(point.lat) : "",
+      lng: point.lng !== null && point.lng !== undefined ? String(point.lng) : "",
+      is_active: point.is_active === 1,
+    });
+    setPointModalOpen(true);
+  };
+
+  const savePoint = async () => {
+    if (!pointForm.title.trim() || !pointForm.address.trim()) return;
+    setPointSaving(true);
+
+    const payload = {
+      title: pointForm.title.trim(),
+      address: pointForm.address.trim(),
+      phone: pointForm.phone.trim() || null,
+      workHours: pointForm.work_hours.trim() || null,
+      lat: pointForm.lat.trim() ? Number(pointForm.lat) : null,
+      lng: pointForm.lng.trim() ? Number(pointForm.lng) : null,
+      isActive: pointForm.is_active,
+    };
+
+    const url = editingPointId
+      ? `/api/pickup-points/${editingPointId}`
+      : "/api/pickup-points";
+    const method = editingPointId ? "PUT" : "POST";
+
+    await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    setPointSaving(false);
+    setPointModalOpen(false);
+    load();
+  };
+
+  const removePoint = async (id: number) => {
+    await fetch(`/api/pickup-points/${id}`, { method: "DELETE" });
+    load();
   };
 
   return (
@@ -145,7 +251,7 @@ export default function SettingsPage() {
             </label>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-4">
             <label className="text-sm font-semibold">
               Доставка (сум)
               <input
@@ -180,6 +286,20 @@ export default function SettingsPage() {
                 value={form.currency}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, currency: event.target.value }))
+                }
+                className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+              />
+            </label>
+            <label className="text-sm font-semibold">
+              Бонусы при оплате
+              <input
+                type="number"
+                value={form.bonus_redeem_amount}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    bonus_redeem_amount: Number(event.target.value),
+                  }))
                 }
                 className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
               />
@@ -220,6 +340,170 @@ export default function SettingsPage() {
           </div>
         </Card>
       )}
+
+      <SectionTitle
+        title="Точки самовывоза"
+        subtitle="Список адресов, которые показываются в мобильном приложении."
+      />
+
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-medium text-[var(--muted)]">
+            Добавьте все точки самовывоза и отметьте активные.
+          </p>
+          <PrimaryButton onClick={openNewPoint}>Добавить точку</PrimaryButton>
+        </div>
+
+        {pointsLoading ? (
+          <p className="mt-4 text-sm text-[var(--muted)]">Загрузка...</p>
+        ) : points.length === 0 ? (
+          <p className="mt-4 text-sm text-[var(--muted)]">
+            Точек пока нет.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {points.map((point) => (
+              <div
+                key={point.id}
+                className="rounded-3xl border border-[var(--stroke)] bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-bold text-[var(--ink)]">
+                      {point.title}
+                    </p>
+                    <p className="text-sm text-[var(--muted)]">{point.address}</p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      point.is_active
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {point.is_active ? "Активна" : "Выключена"}
+                  </span>
+                </div>
+                <div className="mt-3 text-xs text-[var(--muted)]">
+                  {point.phone ? <p>Телефон: {point.phone}</p> : null}
+                  {point.work_hours ? <p>Время: {point.work_hours}</p> : null}
+                  {point.lat !== null && point.lng !== null ? (
+                    <p>
+                      Координаты: {point.lat}, {point.lng}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <GhostButton onClick={() => openEditPoint(point)}>
+                    Редактировать
+                  </GhostButton>
+                  <GhostButton onClick={() => removePoint(point.id)}>
+                    Удалить
+                  </GhostButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Modal
+        open={pointModalOpen}
+        onClose={() => setPointModalOpen(false)}
+        title={editingPointId ? "Редактировать точку" : "Новая точка"}
+        footer={
+          <div className="flex flex-wrap gap-3">
+            <PrimaryButton onClick={savePoint} disabled={pointSaving}>
+              {pointSaving ? "Сохраняю..." : "Сохранить"}
+            </PrimaryButton>
+            <GhostButton onClick={() => setPointModalOpen(false)}>
+              Отмена
+            </GhostButton>
+          </div>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="text-sm font-semibold">
+            Название
+            <input
+              value={pointForm.title}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, title: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+          <label className="text-sm font-semibold">
+            Телефон
+            <input
+              value={pointForm.phone}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, phone: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+        </div>
+        <div className="mt-4">
+          <label className="text-sm font-semibold">
+            Адрес
+            <input
+              value={pointForm.address}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, address: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <label className="text-sm font-semibold">
+            Время работы
+            <input
+              value={pointForm.work_hours}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, work_hours: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+          <label className="text-sm font-semibold">
+            Активна
+            <select
+              value={pointForm.is_active ? "1" : "0"}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, is_active: event.target.value === "1" }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            >
+              <option value="1">Да</option>
+              <option value="0">Нет</option>
+            </select>
+          </label>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <label className="text-sm font-semibold">
+            Широта (lat)
+            <input
+              value={pointForm.lat}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, lat: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+          <label className="text-sm font-semibold">
+            Долгота (lng)
+            <input
+              value={pointForm.lng}
+              onChange={(event) =>
+                setPointForm((prev) => ({ ...prev, lng: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+        </div>
+      </Modal>
     </div>
   );
 }

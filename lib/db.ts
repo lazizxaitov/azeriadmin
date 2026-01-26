@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import Database from "better-sqlite3";
 import fs from "node:fs";
@@ -85,6 +85,7 @@ db.exec(`
     name TEXT NOT NULL,
     phone TEXT,
     password TEXT,
+    bonus_balance INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -108,6 +109,8 @@ db.exec(`
     total_amount INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'paid',
     comment TEXT,
+    bonus_used INTEGER NOT NULL DEFAULT 0,
+    bonus_earned INTEGER NOT NULL DEFAULT 0,
     courier_id INTEGER,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -145,9 +148,46 @@ db.exec(`
     delivery_fee INTEGER NOT NULL DEFAULT 0,
     min_order INTEGER NOT NULL DEFAULT 0,
     currency TEXT NOT NULL DEFAULT 'сум',
+    bonus_redeem_amount INTEGER NOT NULL DEFAULT 25000,
     instagram TEXT,
     telegram TEXT,
     updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS pickup_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone TEXT,
+    work_hours TEXT,
+    lat REAL,
+    lng REAL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS bonus_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL,
+    delta INTEGER NOT NULL,
+    balance_after INTEGER,
+    reason TEXT,
+    order_id INTEGER,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title_ru TEXT NOT NULL,
+    title_uz TEXT NOT NULL,
+    body_ru TEXT NOT NULL,
+    body_uz TEXT NOT NULL,
+    image_url TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
   );
 
   CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
@@ -156,6 +196,8 @@ db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
   CREATE INDEX IF NOT EXISTS idx_customer_addresses_customer_id ON customer_addresses(customer_id);
   CREATE INDEX IF NOT EXISTS idx_couriers_active ON couriers(is_active);
+  CREATE INDEX IF NOT EXISTS idx_bonus_transactions_customer_id ON bonus_transactions(customer_id);
+  CREATE INDEX IF NOT EXISTS idx_pickup_points_active ON pickup_points(is_active);
 `);
 
 function ensureColumn(table: string, column: string, type: string) {
@@ -169,9 +211,13 @@ function ensureColumn(table: string, column: string, type: string) {
 }
 
 ensureColumn("customers", "password", "TEXT");
+ensureColumn("customers", "bonus_balance", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "customer_address_id", "INTEGER");
 ensureColumn("orders", "comment", "TEXT");
+ensureColumn("orders", "bonus_used", "INTEGER NOT NULL DEFAULT 0");
+ensureColumn("orders", "bonus_earned", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("orders", "courier_id", "INTEGER");
+ensureColumn("settings", "bonus_redeem_amount", "INTEGER NOT NULL DEFAULT 25000");
 
 function tableHasRows(table: string) {
   const row = db.prepare(`SELECT 1 FROM ${table} LIMIT 1`).get() as
@@ -263,8 +309,8 @@ const settingsRow = db
 if (!settingsRow?.id) {
   db.prepare(
     `INSERT INTO settings
-     (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, instagram, telegram, updated_at)
-     VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', '', '', ?)`
+     (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_redeem_amount, instagram, telegram, updated_at)
+     VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 25000, '', '', ?)`
   ).run(nowIso());
 }
 
