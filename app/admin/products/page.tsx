@@ -147,7 +147,11 @@ export default function ProductsPage() {
     const body = new FormData();
     body.append("file", file);
     const response = await fetch("/api/upload", { method: "POST", body });
-    if (!response.ok) throw new Error("upload failed");
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      const message = error?.error ?? `Upload failed (${response.status})`;
+      throw new Error(message);
+    }
     const data = await response.json();
     return data.url as string;
   };
