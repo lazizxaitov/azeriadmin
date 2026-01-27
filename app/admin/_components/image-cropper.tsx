@@ -89,6 +89,33 @@ export default function ImageCropper({
     setCroppedAreaPixels(areaPixels);
   }, []);
 
+  const onMediaLoaded = useCallback(
+    (mediaSize: { width: number; height: number }) => {
+      const mediaWidth = mediaSize.width;
+      const mediaHeight = mediaSize.height;
+      if (!mediaWidth || !mediaHeight) return;
+
+      let cropWidth = mediaWidth;
+      let cropHeight = cropWidth / aspect;
+
+      if (cropHeight > mediaHeight) {
+        cropHeight = mediaHeight;
+        cropWidth = cropHeight * aspect;
+      }
+
+      const cropX = (mediaWidth - cropWidth) / 2;
+      const cropY = (mediaHeight - cropHeight) / 2;
+
+      setCroppedAreaPixels({
+        x: cropX,
+        y: cropY,
+        width: cropWidth,
+        height: cropHeight,
+      });
+    },
+    [aspect]
+  );
+
   if (!open) return null;
 
   return (
@@ -109,6 +136,7 @@ export default function ImageCropper({
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
+            onMediaLoaded={onMediaLoaded}
           />
         </div>
 
