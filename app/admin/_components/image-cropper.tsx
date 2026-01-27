@@ -84,6 +84,7 @@ export default function ImageCropper({
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onCropComplete = useCallback((_: Area, areaPixels: Area) => {
     setCroppedAreaPixels(areaPixels);
@@ -161,19 +162,30 @@ export default function ImageCropper({
             onClick={async () => {
               if (!croppedAreaPixels) return;
               setSaving(true);
-              const file = await getCroppedFile(
-                imageSrc,
-                croppedAreaPixels,
-                outputType
-              );
-              onConfirm(file);
-              setSaving(false);
+              setError(null);
+              try {
+                const file = await getCroppedFile(
+                  imageSrc,
+                  croppedAreaPixels,
+                  outputType
+                );
+                await onConfirm(file);
+              } catch (err) {
+                const message =
+                  err instanceof Error ? err.message : "Ошибка сохранения";
+                setError(message);
+              } finally {
+                setSaving(false);
+              }
             }}
           >
             {saving ? "Сохраняю..." : "Обрезать"}
           </PrimaryButton>
           <GhostButton onClick={onCancel}>Отмена</GhostButton>
         </div>
+        {error ? (
+          <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>
+        ) : null}
       </div>
     </div>
   );
