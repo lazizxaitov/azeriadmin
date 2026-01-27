@@ -21,6 +21,7 @@ type Order = {
   customer_phone?: string | null;
   address_line?: string | null;
   address_label?: string | null;
+  payment_method?: string | null;
   created_at?: string | null;
   accepted_at?: string | null;
   in_delivery_at?: string | null;
@@ -248,6 +249,9 @@ export default function CashierHistoryPage() {
               <p className="text-[var(--muted)]">
                 {selected.address_label ? `${selected.address_label} · ` : ""}
                 {selected.address_line ?? "—"}
+              </p>
+              <p className="text-[var(--muted)]">
+                Способ оплаты: {selected.payment_method ?? "—"}
               </p>
             </div>
 

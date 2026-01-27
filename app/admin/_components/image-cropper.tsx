@@ -11,6 +11,8 @@ type Props = {
   aspect: number;
   title: string;
   outputType?: string;
+  maxWidth?: number;
+  maxHeight?: number;
   onCancel: () => void;
   onConfirm: (file: File) => void;
 };
@@ -36,11 +38,26 @@ function getOutputMeta(outputType?: string) {
   return { type: "image/jpeg", ext: "jpg", quality: 0.92 };
 }
 
-async function getCroppedFile(imageSrc: string, crop: Area, outputType?: string) {
+async function getCroppedFile(
+  imageSrc: string,
+  crop: Area,
+  outputType?: string,
+  maxWidth?: number,
+  maxHeight?: number
+) {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
-  canvas.width = crop.width;
-  canvas.height = crop.height;
+  let targetWidth = crop.width;
+  let targetHeight = crop.height;
+  if (maxWidth || maxHeight) {
+    const widthLimit = maxWidth ?? crop.width;
+    const heightLimit = maxHeight ?? crop.height;
+    const scale = Math.min(widthLimit / crop.width, heightLimit / crop.height, 1);
+    targetWidth = Math.round(crop.width * scale);
+    targetHeight = Math.round(crop.height * scale);
+  }
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("No canvas context");
 
@@ -52,8 +69,8 @@ async function getCroppedFile(imageSrc: string, crop: Area, outputType?: string)
     crop.height,
     0,
     0,
-    crop.width,
-    crop.height
+    targetWidth,
+    targetHeight
   );
 
   const meta = getOutputMeta(outputType);
@@ -77,6 +94,8 @@ export default function ImageCropper({
   aspect,
   title,
   outputType,
+  maxWidth,
+  maxHeight,
   onCancel,
   onConfirm,
 }: Props) {
@@ -167,7 +186,9 @@ export default function ImageCropper({
                 const file = await getCroppedFile(
                   imageSrc,
                   croppedAreaPixels,
-                  outputType
+                  outputType,
+                  maxWidth,
+                  maxHeight
                 );
                 await onConfirm(file);
               } catch (err) {

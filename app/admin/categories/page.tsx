@@ -307,6 +307,8 @@ export default function CategoriesPage() {
         open={cropOpen && Boolean(cropSrc)}
         imageSrc={cropSrc ?? ""}
         aspect={3 / 2}
+        maxWidth={900}
+        maxHeight={600}
         title="Обрезка категории"
         onCancel={() => {
           setCropOpen(false);

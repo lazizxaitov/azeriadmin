@@ -32,10 +32,11 @@ export async function POST(request: Request) {
   const addressLabel = body?.addressLabel?.toString()?.trim() ?? null;
   const addressComment = body?.addressComment?.toString()?.trim() ?? null;
   const comment = body?.comment?.toString()?.trim() ?? null;
+  const paymentMethod = body?.paymentMethod?.toString()?.trim();
   const bonusUsedRequested = Number(body?.bonusUsed ?? 0);
   const items: OrderItemInput[] = Array.isArray(body?.items) ? body.items : [];
 
-  if (!items.length) {
+  if (!items.length || !paymentMethod) {
     return NextResponse.json({ error: "Missing items" }, { status: 400 });
   }
 
@@ -154,9 +155,18 @@ export async function POST(request: Request) {
 
     const orderResult = db
       .prepare(
-        "INSERT INTO orders (customer_id, customer_address_id, total_amount, status, comment, bonus_used, bonus_earned, created_at, updated_at) VALUES (?, ?, ?, 'paid', ?, ?, 0, ?, ?)"
+        "INSERT INTO orders (customer_id, customer_address_id, total_amount, status, comment, bonus_used, bonus_earned, payment_method, created_at, updated_at) VALUES (?, ?, ?, 'paid', ?, ?, 0, ?, ?, ?)"
       )
-      .run(customerId, customerAddressId, totalAmount, comment, bonusUsed, now, now);
+      .run(
+        customerId,
+        customerAddressId,
+        totalAmount,
+        comment,
+        bonusUsed,
+        paymentMethod,
+        now,
+        now
+      );
 
     const orderId = Number(orderResult.lastInsertRowid);
     const insertItem = db.prepare(
