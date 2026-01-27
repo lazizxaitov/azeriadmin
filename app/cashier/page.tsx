@@ -31,6 +31,7 @@ type Order = {
   address_comment?: string | null;
   address_label?: string | null;
   courier_id?: number | null;
+  payment_method?: string | null;
   items: OrderItem[];
 };
 
@@ -54,6 +55,7 @@ export default function CashierPage() {
   const [notifications, setNotifications] = useState<Order[]>([]);
   const seenIdsRef = useRef<Set<number>>(new Set());
   const initializedRef = useRef(false);
+  const lastSnapshotRef = useRef<string>("");
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [rejecting, setRejecting] = useState<Order | null>(null);
@@ -86,8 +88,17 @@ export default function CashierPage() {
         const ordersData = await ordersRes.json();
         const couriersData = await couriersRes.json();
         const incoming = ordersData.items ?? [];
-        setOrders(incoming);
-        setCouriers(couriersData.items ?? []);
+        const snapshot = JSON.stringify(incoming.map((order: Order) => order.id));
+        const hasChanges = snapshot !== lastSnapshotRef.current;
+
+        if (hasChanges) {
+          setOrders(incoming);
+          lastSnapshotRef.current = snapshot;
+        }
+
+        if (Array.isArray(couriersData.items)) {
+          setCouriers(couriersData.items ?? []);
+        }
 
         if (!initializedRef.current) {
           incoming.forEach((order: Order) => seenIdsRef.current.add(order.id));
@@ -257,6 +268,9 @@ export default function CashierPage() {
                   <p className="text-[var(--muted)]">
                     {order.address_label ? `${order.address_label} · ` : ""}
                     {order.address_line ?? "—"}
+                  </p>
+                  <p className="text-[var(--muted)]">
+                    Способ оплаты: {order.payment_method ?? "—"}
                   </p>
                   {order.address_comment ? (
                     <p className="text-[var(--muted)]">
