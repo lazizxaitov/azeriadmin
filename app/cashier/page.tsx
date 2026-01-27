@@ -88,7 +88,9 @@ export default function CashierPage() {
         const ordersData = await ordersRes.json();
         const couriersData = await couriersRes.json();
         const incoming = ordersData.items ?? [];
-        const snapshot = JSON.stringify(incoming.map((order: Order) => order.id));
+        const snapshot = JSON.stringify(
+          incoming.map((order: Order) => [order.id, order.status, order.courier_id])
+        );
         const hasChanges = snapshot !== lastSnapshotRef.current;
 
         if (hasChanges) {
