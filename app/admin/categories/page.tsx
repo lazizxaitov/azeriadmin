@@ -28,6 +28,7 @@ export default function CategoriesPage() {
   const [cropOpen, setCropOpen] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropType, setCropType] = useState<string>("image/jpeg");
+  const [searchQuery, setSearchQuery] = useState("");
   const [form, setForm] = useState({
     nameRu: "",
     nameUz: "",
@@ -148,12 +149,41 @@ export default function CategoriesPage() {
     load();
   };
 
+
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      item.name_ru.toLowerCase().includes(query) ||
+      item.name_uz.toLowerCase().includes(query) ||
+      item.slug.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="space-y-8">
-      <SectionTitle
-        title="Категории"
-        subtitle="Добавляйте и обновляйте категории каталога на двух языках."
-      />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-extrabold text-[var(--ink)]">
+            {"Категории"}
+          </h2>
+          <p className="mt-1 text-sm font-medium text-[var(--muted)]">
+            {"Добавляйте и обновляйте категории каталога на двух языках."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={"Поиск по категориям"}
+            className="h-9 w-52 rounded-2xl border border-[var(--stroke)] bg-white px-3 text-xs"
+          />
+          <GhostButton onClick={() => setSearchQuery("")}>
+            {"Поиск"}
+          </GhostButton>
+        </div>
+      </div>
+
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -177,10 +207,10 @@ export default function CategoriesPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {loading ? (
           <Card>Загрузка...</Card>
-        ) : items.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <Card>Пока нет категорий.</Card>
         ) : (
-          items.map((item) => (
+          filteredItems.map((item) => (
             <Card key={item.id} className="flex flex-col gap-4">
               {item.image_url ? (
                 <img
