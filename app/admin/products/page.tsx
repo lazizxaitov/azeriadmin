@@ -59,6 +59,10 @@ export default function ProductsPage() {
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [categoryQuery, setCategoryQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategoryId, setFilterCategoryId] = useState("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterQuery, setFilterQuery] = useState("");
   const [productCropMode, setProductCropMode] = useState<
     "list" | "top" | "carousel"
   >("list");
@@ -243,8 +247,32 @@ export default function ProductsPage() {
   const selectedCategory = categories.find(
     (cat) => String(cat.id) === form.categoryId
   );
+  const selectedFilterCategory = categories.find(
+    (cat) => String(cat.id) === filterCategoryId
+  );
   const filteredCategories = categories.filter((cat) => {
     const query = categoryQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      cat.name_ru.toLowerCase().includes(query) ||
+      cat.name_uz.toLowerCase().includes(query)
+    );
+  });
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesQuery =
+      !query ||
+      item.title_ru.toLowerCase().includes(query) ||
+      item.title_uz.toLowerCase().includes(query) ||
+      (item.category_name_ru ?? "").toLowerCase().includes(query) ||
+      (item.category_name_uz ?? "").toLowerCase().includes(query);
+    const matchesCategory =
+      filterCategoryId === "all" ||
+      String(item.category_id ?? "") === filterCategoryId;
+    return matchesQuery && matchesCategory;
+  });
+  const filteredFilterCategories = categories.filter((cat) => {
+    const query = filterQuery.trim().toLowerCase();
     if (!query) return true;
     return (
       cat.name_ru.toLowerCase().includes(query) ||
@@ -254,10 +282,89 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-8">
-      <SectionTitle
-        title="Товары"
-        subtitle="Полный каталог с ценами, остатками и вариантами."
-      />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-extrabold text-[var(--ink)]">
+            {"\u0422\u043e\u0432\u0430\u0440\u044b"}
+          </h2>
+          <p className="mt-1 text-sm font-medium text-[var(--muted)]">
+            {"\u041f\u043e\u043b\u043d\u044b\u0439 \u043a\u0430\u0442\u0430\u043b\u043e\u0433 \u0441 \u0446\u0435\u043d\u0430\u043c\u0438, \u043e\u0441\u0442\u0430\u0442\u043a\u0430\u043c\u0438 \u0438 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u0430\u043c\u0438."}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={"\u041f\u043e\u0438\u0441\u043a \u043f\u043e \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044e"}
+              className="h-9 w-52 rounded-2xl border border-[var(--stroke)] bg-white px-3 text-xs"
+            />
+            <GhostButton onClick={() => setSearchQuery("")}>
+              {"\u041f\u043e\u0438\u0441\u043a"}
+            </GhostButton>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((prev) => !prev)}
+              className="mt-1 flex h-9 w-[300px] items-center justify-between rounded-2xl border border-[var(--stroke)] bg-white px-3 text-xs font-semibold text-[var(--ink)]"
+            >
+              <span>
+                {filterCategoryId === "all"
+                  ? "\u0412\u0441\u0435 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438"
+                  : selectedFilterCategory?.name_ru ?? "\u0412\u0441\u0435 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438"}
+              </span>
+              <span className="text-sm">{"\u25be"}</span>
+            </button>
+
+            {filterOpen ? (
+              <div className="absolute right-0 z-20 mt-2 w-[300px] overflow-hidden rounded-2xl border border-[var(--stroke)] bg-white shadow-[var(--shadow)]">
+                <div className="p-3">
+                  <input
+                    value={filterQuery}
+                    onChange={(event) => setFilterQuery(event.target.value)}
+                    placeholder={"\u041f\u043e\u0438\u0441\u043a \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438..."}
+                    className="w-full rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs"
+                  />
+                </div>
+                <div className="max-h-56 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilterCategoryId("all");
+                      setFilterOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left text-xs hover:bg-[var(--accent)]"
+                  >
+                    <span>{"\u0412\u0441\u0435 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438"}</span>
+                  </button>
+                  {filteredFilterCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        setFilterCategoryId(String(cat.id));
+                        setFilterOpen(false);
+                      }}
+                      className="flex w-full items-center justify-between px-4 py-3 text-left text-xs hover:bg-[var(--accent)]"
+                    >
+                      <span>{cat.name_ru}</span>
+                      <span className="text-[10px] text-[var(--muted)]">
+                        {cat.name_uz}
+                      </span>
+                    </button>
+                  ))}
+                  {filteredFilterCategories.length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-[var(--muted)]">
+                      {"\u041d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e"}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -279,10 +386,10 @@ export default function ProductsPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {loading ? (
           <Card>Загрузка...</Card>
-        ) : items.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <Card>Пока нет товаров.</Card>
         ) : (
-          items.map((item) => (
+          filteredItems.map((item) => (
             <Card key={item.id} className="flex flex-col gap-4">
               {item.images?.[0] ? (
                 <img
@@ -681,7 +788,7 @@ export default function ProductsPage() {
         open={cropOpen && Boolean(cropSrc)}
         imageSrc={cropSrc ?? ""}
         aspect={productAspect}
-        title="???? ???"
+        title="Обрезка товара"
         onCancel={handleCropCancel}
         onConfirm={handleCropConfirm}
       />
