@@ -66,7 +66,7 @@ export default function ProductsPage() {
     titleRu: "",
     titleUz: "",
     categoryId: "",
-    price: 0,
+    price: "",
     descriptionTitleRu: "",
     descriptionTitleUz: "",
     descriptionTextRu: "",
@@ -101,7 +101,7 @@ export default function ProductsPage() {
       titleRu: "",
       titleUz: "",
       categoryId: "",
-      price: 0,
+      price: "",
       descriptionTitleRu: "",
       descriptionTitleUz: "",
       descriptionTextRu: "",
@@ -123,7 +123,7 @@ export default function ProductsPage() {
       titleRu: item.title_ru,
       titleUz: item.title_uz,
       categoryId: item.category_id ? String(item.category_id) : "",
-      price: item.price,
+      price: String(item.price),
       descriptionTitleRu: item.description_title_ru ?? "",
       descriptionTitleUz: item.description_title_uz ?? "",
       descriptionTextRu: item.description_text_ru ?? "",
@@ -202,7 +202,7 @@ export default function ProductsPage() {
       titleRu: form.titleRu,
       titleUz: form.titleUz,
       categoryId: form.categoryId ? Number(form.categoryId) : null,
-      price: Number(form.price),
+      price: Number(form.price || 0),
       priceTextRu: null,
       priceTextUz: null,
       descriptionTitleRu: form.descriptionTitleRu || null,
@@ -450,7 +450,7 @@ export default function ProductsPage() {
               onChange={(event) =>
                 setForm((prev) => ({
                   ...prev,
-                  price: Number(event.target.value),
+                  price: event.target.value,
                 }))
               }
               className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm font-medium text-[var(--ink)]"
