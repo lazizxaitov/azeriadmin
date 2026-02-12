@@ -153,7 +153,24 @@ export default function CategoriesPage() {
   const filteredItems = items.filter((item) => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
-    return (
+  
+  const updateSortOrder = async (id: number, value: number) => {
+    const item = items.find((cat) => cat.id === id);
+    if (!item) return;
+    await fetch(`/api/categories/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nameRu: item.name_ru,
+        nameUz: item.name_uz,
+        slug: item.slug,
+        imageUrl: item.image_url ?? null,
+        sortOrder: value,
+      }),
+    });
+    load();
+  };
+  return (
       item.name_ru.toLowerCase().includes(query) ||
       item.name_uz.toLowerCase().includes(query) ||
       item.slug.toLowerCase().includes(query)
@@ -232,16 +249,40 @@ export default function CategoriesPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <GhostButton onClick={() => moveCategory(item.id, "up")}>
-                      ↑
+                      {"\u2191"}
                     </GhostButton>
                     <GhostButton onClick={() => moveCategory(item.id, "down")}>
-                      ↓
+                      {"\u2193"}
                     </GhostButton>
                   </div>
-                  <GhostButton onClick={() => startEdit(item)}>Ред.</GhostButton>
-                  <GhostButton onClick={() => remove(item.id)}>Удал.</GhostButton>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--muted)]">{"\u041f\u043e\u0440\u044f\u0434\u043e\u043a"}</span>
+                    <input
+                      type="number"
+                      value={item.sort_order ?? 0}
+                      onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setItems((prev) =>
+                          prev.map((cat) =>
+                            cat.id === item.id
+                              ? { ...cat, sort_order: value }
+                              : cat
+                          )
+                        );
+                      }}
+                      onBlur={(event) => {
+                        const value = Number(event.target.value);
+                        if (Number.isFinite(value)) {
+                          updateSortOrder(item.id, value);
+                        }
+                      }}
+                      className="w-20 rounded-2xl border border-[var(--stroke)] bg-white px-2 py-1 text-xs"
+                    />
+                  </div>
+                  <GhostButton onClick={() => startEdit(item)}>{"\u0420\u0435\u0434."}</GhostButton>
+                  <GhostButton onClick={() => remove(item.id)}>{"\u0423\u0434\u0430\u043b."}</GhostButton>
                 </div>
               </div>
             </Card>

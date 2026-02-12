@@ -21,6 +21,7 @@ export default function TopProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [topItems, setTopItems] = useState<TopItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const load = () => {
     setLoading(true);
@@ -78,13 +79,39 @@ export default function TopProductsPage() {
     });
     load();
   };
+  const filteredProducts = products.filter((product) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      product.title_ru.toLowerCase().includes(query) ||
+      product.title_uz.toLowerCase().includes(query)
+    );
+  });
+
 
   return (
     <div className="space-y-8">
-      <SectionTitle
-        title="Топ товары"
-        subtitle="Выберите товары, которые будут отображаться в топе."
-      />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-extrabold text-[var(--ink)]">
+            {"Топ товары"}
+          </h2>
+          <p className="mt-1 text-sm font-medium text-[var(--muted)]">
+            {"Выберите товары, которые будут отображаться в топе."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={"Поиск по товарам"}
+            className="h-9 w-52 rounded-2xl border border-[var(--stroke)] bg-white px-3 text-xs"
+          />
+          <GhostButton onClick={() => setSearchQuery("")}>
+            {"Поиск"}
+          </GhostButton>
+        </div>
+      </div>
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -105,7 +132,7 @@ export default function TopProductsPage() {
         {loading ? (
           <Card>Загрузка...</Card>
         ) : (
-          products.map((product) => {
+          filteredProducts.map((product) => {
             const active = selectionMap.has(product.id);
             return (
               <Card key={product.id} className="flex items-center justify-between gap-4">
