@@ -150,10 +150,6 @@ export default function CategoriesPage() {
   };
 
 
-  const filteredItems = items.filter((item) => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return true;
-  
   const updateSortOrder = async (id: number, value: number) => {
     const item = items.find((cat) => cat.id === id);
     if (!item) return;
@@ -170,7 +166,11 @@ export default function CategoriesPage() {
     });
     load();
   };
-  return (
+
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
       item.name_ru.toLowerCase().includes(query) ||
       item.name_uz.toLowerCase().includes(query) ||
       item.slug.toLowerCase().includes(query)
