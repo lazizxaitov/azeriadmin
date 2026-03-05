@@ -17,7 +17,9 @@ export async function GET() {
 
   const db = getDb();
   const items = db
-    .prepare("SELECT * FROM categories ORDER BY sort_order ASC, created_at DESC")
+    .prepare(
+      "SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, created_at DESC"
+    )
     .all();
   return NextResponse.json({ items });
 }

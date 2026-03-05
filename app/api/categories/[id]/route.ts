@@ -27,6 +27,8 @@ export async function PUT(
   const slugInput = body?.slug?.toString()?.trim();
   const sortOrder =
     body?.sortOrder !== undefined ? Number(body.sortOrder) : undefined;
+  const isActive =
+    body?.isActive !== undefined ? (body.isActive ? 1 : 0) : undefined;
 
   if (!nameRu || !nameUz) {
     return NextResponse.json({ error: "Missing name" }, { status: 400 });
@@ -36,13 +38,13 @@ export async function PUT(
   const slug = slugInput ? slugify(slugInput) : slugify(nameRu);
 
   const current = db
-    .prepare("SELECT sort_order FROM categories WHERE id = ?")
-    .get(id) as { sort_order?: number } | undefined;
+    .prepare("SELECT sort_order, is_active FROM categories WHERE id = ?")
+    .get(id) as { sort_order?: number; is_active?: number } | undefined;
 
   const now = nowIso();
   db.prepare(
     `UPDATE categories
-     SET name_ru = ?, name_uz = ?, slug = ?, image_url = ?, sort_order = ?, updated_at = ?
+     SET name_ru = ?, name_uz = ?, slug = ?, image_url = ?, sort_order = ?, is_active = ?, updated_at = ?
      WHERE id = ?`
   ).run(
     nameRu,
@@ -50,6 +52,7 @@ export async function PUT(
     slug,
     imageUrl,
     sortOrder ?? Number(current?.sort_order ?? 0),
+    isActive ?? Number(current?.is_active ?? 1),
     now,
     id
   );

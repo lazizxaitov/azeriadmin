@@ -18,6 +18,7 @@ type Category = {
   slug: string;
   image_url?: string | null;
   sort_order?: number | null;
+  is_active: number;
 };
 
 export default function CategoriesPage() {
@@ -34,6 +35,7 @@ export default function CategoriesPage() {
     nameUz: "",
     slug: "",
     imageUrl: "",
+    isActive: true,
   });
 
   const load = () => {
@@ -51,7 +53,13 @@ export default function CategoriesPage() {
 
   const resetForm = () => {
     setEditingId(null);
-    setForm({ nameRu: "", nameUz: "", slug: "", imageUrl: "" });
+    setForm({
+      nameRu: "",
+      nameUz: "",
+      slug: "",
+      imageUrl: "",
+      isActive: true,
+    });
   };
 
   const startEdit = (item: Category) => {
@@ -62,6 +70,7 @@ export default function CategoriesPage() {
       nameUz: item.name_uz,
       slug: item.slug,
       imageUrl: item.image_url ?? "",
+      isActive: item.is_active === 1,
     });
   };
 
@@ -84,6 +93,7 @@ export default function CategoriesPage() {
       nameUz: form.nameUz,
       slug: form.slug,
       imageUrl: form.imageUrl || null,
+      isActive: form.isActive,
     };
 
     if (editingId) {
@@ -107,6 +117,22 @@ export default function CategoriesPage() {
 
   const remove = async (id: number) => {
     await fetch(`/api/categories/${id}`, { method: "DELETE" });
+    load();
+  };
+
+  const toggleCategoryVisibility = async (item: Category) => {
+    await fetch(`/api/categories/${item.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nameRu: item.name_ru,
+        nameUz: item.name_uz,
+        slug: item.slug,
+        imageUrl: item.image_url ?? null,
+        sortOrder: Number(item.sort_order ?? 0),
+        isActive: item.is_active !== 1,
+      }),
+    });
     load();
   };
 
@@ -247,6 +273,12 @@ export default function CategoriesPage() {
                   <p className="mt-2 text-xs text-[var(--muted)]">
                     slug: {item.slug}
                   </p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {"\u0421\u0442\u0430\u0442\u0443\u0441"}:{" "}
+                    {item.is_active === 1
+                      ? "\u0412\u0438\u0434\u0438\u043c\u0430 \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0438"
+                      : "\u0421\u043a\u0440\u044b\u0442\u0430 \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0438"}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
@@ -281,6 +313,11 @@ export default function CategoriesPage() {
                       className="w-20 rounded-2xl border border-[var(--stroke)] bg-white px-2 py-1 text-xs"
                     />
                   </div>
+                  <GhostButton onClick={() => toggleCategoryVisibility(item)}>
+                    {item.is_active === 1
+                      ? "\u0421\u043a\u0440\u044b\u0442\u044c"
+                      : "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c"}
+                  </GhostButton>
                   <GhostButton onClick={() => startEdit(item)}>{"\u0420\u0435\u0434."}</GhostButton>
                   <GhostButton onClick={() => remove(item.id)}>{"\u0423\u0434\u0430\u043b."}</GhostButton>
                 </div>

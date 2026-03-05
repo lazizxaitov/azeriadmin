@@ -24,6 +24,13 @@ export async function GET(
   }
 
   const db = getDb();
+  const category = db
+    .prepare("SELECT id FROM categories WHERE id = ? AND is_active = 1")
+    .get(categoryId) as { id: number } | undefined;
+  if (!category) {
+    return NextResponse.json({ items: [] });
+  }
+
   const products = db
     .prepare(
       `SELECT * FROM products

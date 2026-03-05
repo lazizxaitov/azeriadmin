@@ -233,6 +233,7 @@ function ensureColumn(table: string, column: string, type: string) {
 ensureColumn("customers", "password", "TEXT");
 ensureColumn("customers", "bonus_balance", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("categories", "sort_order", "INTEGER NOT NULL DEFAULT 0");
+ensureColumn("categories", "is_active", "INTEGER NOT NULL DEFAULT 1");
 ensureColumn("orders", "customer_address_id", "INTEGER");
 ensureColumn("orders", "comment", "TEXT");
 ensureColumn("orders", "bonus_used", "INTEGER NOT NULL DEFAULT 0");

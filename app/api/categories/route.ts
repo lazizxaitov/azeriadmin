@@ -30,6 +30,7 @@ export async function POST(request: Request) {
   const nameRu = body?.nameRu?.toString()?.trim();
   const nameUz = body?.nameUz?.toString()?.trim();
   const imageUrl = body?.imageUrl?.toString()?.trim() ?? null;
+  const isActive = body?.isActive === undefined ? 1 : body.isActive ? 1 : 0;
 
   if (!nameRu || !nameUz) {
     return NextResponse.json({ error: "Missing name" }, { status: 400 });
@@ -51,10 +52,10 @@ export async function POST(request: Request) {
   const sortOrder = (lastOrder?.maxOrder ?? 0) + 1;
   const result = db
     .prepare(
-      `INSERT INTO categories (name_ru, name_uz, slug, image_url, sort_order, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO categories (name_ru, name_uz, slug, image_url, sort_order, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .run(nameRu, nameUz, slug, imageUrl, sortOrder, now, now);
+    .run(nameRu, nameUz, slug, imageUrl, sortOrder, isActive, now, now);
 
   return NextResponse.json({ id: result.lastInsertRowid });
 }
