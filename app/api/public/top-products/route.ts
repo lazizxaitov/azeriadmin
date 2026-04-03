@@ -17,7 +17,14 @@ export async function GET() {
 
   const db = getDb();
   const items = db
-    .prepare("SELECT product_id, sort_order FROM top_products ORDER BY sort_order ASC")
+    .prepare(
+      `SELECT tp.product_id, tp.sort_order
+       FROM top_products tp
+       JOIN products p ON p.id = tp.product_id
+       LEFT JOIN categories c ON c.id = p.category_id
+       WHERE p.is_active = 1 AND (p.category_id IS NULL OR c.is_active = 1)
+       ORDER BY tp.sort_order ASC`
+    )
     .all();
   return NextResponse.json({ items });
 }

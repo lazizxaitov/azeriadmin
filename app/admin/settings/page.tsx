@@ -66,6 +66,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingFull, setDownloadingFull] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   const [points, setPoints] = useState<PickupPoint[]>([]);
   const [pointsLoading, setPointsLoading] = useState(true);
@@ -140,6 +143,43 @@ export default function SettingsPage() {
     link.remove();
     window.URL.revokeObjectURL(url);
     setDownloading(false);
+  };
+
+  const downloadFullBackup = async () => {
+    setDownloadingFull(true);
+    const response = await fetch("/api/backup/full");
+    if (!response.ok) {
+      setDownloadingFull(false);
+      return;
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `azeri-full-backup-${Date.now()}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    setDownloadingFull(false);
+  };
+
+  const restoreBackup = async (file: File) => {
+    setRestoring(true);
+    setRestoreError(null);
+    const body = new FormData();
+    body.append("file", file);
+    const response = await fetch("/api/backup/restore", {
+      method: "POST",
+      body,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      setRestoreError(error?.error ?? "Ошибка восстановления");
+      setRestoring(false);
+      return;
+    }
+    setRestoring(false);
   };
 
   const openNewPoint = () => {
@@ -354,7 +394,34 @@ export default function SettingsPage() {
             <GhostButton onClick={downloadBackup} disabled={downloading}>
               {downloading ? "Готовлю бэкап..." : "Скачать бэкап"}
             </GhostButton>
+            <GhostButton onClick={downloadFullBackup} disabled={downloadingFull}>
+              {downloadingFull ? "Готовлю полный бэкап..." : "Скачать полный бэкап"}
+            </GhostButton>
+            <label className="flex items-center gap-2 rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]">
+              {restoring ? "Восстанавливаю..." : "Восстановить бэкап"}
+              <input
+                type="file"
+                accept=".zip,.db"
+                disabled={restoring}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  restoreBackup(file);
+                  event.currentTarget.value = "";
+                }}
+                className="hidden"
+              />
+            </label>
           </div>
+          {restoreError ? (
+            <p className="mt-3 text-sm font-semibold text-red-600">
+              {restoreError}
+            </p>
+          ) : null}
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            После восстановления перезапустите приложение, чтобы новые данные
+            загрузились.
+          </p>
         </Card>
       )}
 
