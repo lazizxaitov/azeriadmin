@@ -14,6 +14,9 @@ type Settings = {
   currency: string;
   bonus_percent: number;
   bonus_redeem_amount: number;
+  card_payment_enabled: number;
+  cash_payment_enabled: number;
+  card_payment_text: string;
   instagram: string;
   telegram: string;
 };
@@ -60,6 +63,9 @@ export default function SettingsPage() {
     currency: "сум",
     bonus_percent: 0,
     bonus_redeem_amount: 25000,
+    card_payment_enabled: 1,
+    cash_payment_enabled: 1,
+    card_payment_text: "",
     instagram: "",
     telegram: "",
   });
@@ -85,7 +91,7 @@ export default function SettingsPage() {
         const settingsData = await settingsRes.json();
         const pointsData = await pointsRes.json();
         if (settingsData?.item) {
-          setForm(settingsData.item);
+          setForm((prev) => ({ ...prev, ...settingsData.item }));
         }
         if (Array.isArray(pointsData?.items)) {
           setPoints(pointsData.items);
@@ -119,6 +125,9 @@ export default function SettingsPage() {
         currency: form.currency,
         bonusPercent: Number(form.bonus_percent),
         bonusRedeemAmount: Number(form.bonus_redeem_amount),
+        cardPaymentEnabled: form.card_payment_enabled === 1,
+        cashPaymentEnabled: form.cash_payment_enabled === 1,
+        cardPaymentText: form.card_payment_text,
         instagram: form.instagram,
         telegram: form.telegram,
       }),
@@ -384,6 +393,66 @@ export default function SettingsPage() {
                 className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
               />
             </label>
+          </div>
+
+          <div className="mt-6 rounded-3xl border border-[var(--stroke)] bg-white p-4">
+            <p className="text-sm font-extrabold text-[var(--ink)]">Оплата</p>
+            <p className="mt-1 text-xs font-medium text-[var(--muted)]">
+              Эти настройки передаются в мобильное приложение.
+            </p>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold">
+                <span>Оплата картой</span>
+                <input
+                  type="checkbox"
+                  checked={form.card_payment_enabled === 1}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      card_payment_enabled: event.target.checked ? 1 : 0,
+                    }))
+                  }
+                  className="h-5 w-5 accent-[var(--brand)]"
+                />
+              </label>
+
+              <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold">
+                <span>Оплата наличными</span>
+                <input
+                  type="checkbox"
+                  checked={form.cash_payment_enabled === 1}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      cash_payment_enabled: event.target.checked ? 1 : 0,
+                    }))
+                  }
+                  className="h-5 w-5 accent-[var(--brand)]"
+                />
+              </label>
+            </div>
+
+            {form.card_payment_enabled === 0 ? (
+              <label className="mt-4 block text-sm font-semibold">
+                Текст для оплаты картой (номер карты)
+                <textarea
+                  value={form.card_payment_text}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      card_payment_text: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  placeholder="Например: 8600 1234 5678 9012 (HUMO) — Имя Фамилия"
+                  className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+                />
+                <span className="mt-2 block text-xs font-medium text-[var(--muted)]">
+                  Показывается в мобильном приложении, когда оплата картой выключена.
+                </span>
+              </label>
+            ) : null}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">

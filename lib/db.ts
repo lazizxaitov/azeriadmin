@@ -160,6 +160,9 @@ db.exec(`
     currency TEXT NOT NULL DEFAULT 'сум',
     bonus_percent REAL NOT NULL DEFAULT 0,
     bonus_redeem_amount INTEGER NOT NULL DEFAULT 25000,
+    card_payment_enabled INTEGER NOT NULL DEFAULT 1,
+    cash_payment_enabled INTEGER NOT NULL DEFAULT 1,
+    card_payment_text TEXT NOT NULL DEFAULT '',
     instagram TEXT,
     telegram TEXT,
     updated_at TEXT NOT NULL
@@ -250,6 +253,9 @@ ensureColumn("couriers", "car_number", "TEXT");
 ensureColumn("couriers", "comment", "TEXT");
 ensureColumn("settings", "bonus_percent", "REAL NOT NULL DEFAULT 0");
 ensureColumn("settings", "bonus_redeem_amount", "INTEGER NOT NULL DEFAULT 25000");
+ensureColumn("settings", "card_payment_enabled", "INTEGER NOT NULL DEFAULT 1");
+ensureColumn("settings", "cash_payment_enabled", "INTEGER NOT NULL DEFAULT 1");
+ensureColumn("settings", "card_payment_text", "TEXT NOT NULL DEFAULT ''");
 
 function tableHasRows(table: string) {
   const row = db.prepare(`SELECT 1 FROM ${table} LIMIT 1`).get() as
@@ -335,16 +341,11 @@ if (!hasAnyData) {
   });
 }
 
-const settingsRow = db
-  .prepare("SELECT id FROM settings WHERE id = 1")
-  .get() as { id?: number } | undefined;
-if (!settingsRow?.id) {
-  db.prepare(
-    `INSERT INTO settings
-     (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_percent, bonus_redeem_amount, instagram, telegram, updated_at)
-     VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 0, 25000, '', '', ?)`
-  ).run(nowIso());
-}
+db.prepare(
+  `INSERT OR IGNORE INTO settings
+   (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_percent, bonus_redeem_amount, card_payment_enabled, cash_payment_enabled, card_payment_text, instagram, telegram, updated_at)
+   VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 0, 25000, 1, 1, '', '', '', ?)`
+).run(nowIso());
 
 export function getDb() {
   return db;
