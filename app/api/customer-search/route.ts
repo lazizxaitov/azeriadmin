@@ -12,27 +12,44 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  let phone = url.searchParams.get("phone")?.toString().trim() ?? "";
-  if (!phone) {
+  const phoneInput = url.searchParams.get("phone")?.toString().trim() ?? "";
+  if (!phoneInput) {
     return NextResponse.json({ items: [] });
   }
 
-  phone = phone.replace(/[^\d+]/g, "");
-  if (phone && !phone.startsWith("+")) {
-    phone = `+${phone.replace(/^\+/, "")}`;
+  const digitsRaw = phoneInput.replace(/\D/g, "");
+  if (!digitsRaw) return NextResponse.json({ items: [] });
+
+  const variants = new Set<string>();
+  variants.add(digitsRaw);
+  if (digitsRaw.length === 9 && !digitsRaw.startsWith("998")) {
+    variants.add(`998${digitsRaw}`);
+  }
+  if (digitsRaw.startsWith("998")) {
+    variants.add(digitsRaw.slice(3));
   }
 
   const db = getDb();
+  const patterns = Array.from(variants)
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((value) => `%${value}%`);
+
+  const where =
+    patterns.length === 1
+      ? "REPLACE(COALESCE(phone, ''), '+', '') LIKE ?"
+      : patterns.map(() => "REPLACE(COALESCE(phone, ''), '+', '') LIKE ?").join(" OR ");
+
   const items = db
     .prepare(
       `SELECT id, name, phone, bonus_balance, birth_date
        FROM customers
-       WHERE phone LIKE ?
+       WHERE ${where}
        ORDER BY updated_at DESC
        LIMIT 10`
     )
-    .all(`%${phone}%`);
+    .all(...patterns);
 
   return NextResponse.json({ items });
 }
-
