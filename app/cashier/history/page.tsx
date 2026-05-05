@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import BonusModal from "../../_components/bonus-modal";
+
 type OrderItem = {
   title_ru: string;
   title_uz: string;
@@ -62,6 +64,7 @@ export default function CashierHistoryPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("completed");
   const [selected, setSelected] = useState<Order | null>(null);
+  const [bonusOpen, setBonusOpen] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -123,6 +126,12 @@ export default function CashierHistoryPage() {
               Товары
             </Link>
             <button
+              onClick={() => setBonusOpen(true)}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              Добавить бонус
+            </button>
+            <button
               onClick={logout}
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
             >
@@ -130,6 +139,8 @@ export default function CashierHistoryPage() {
             </button>
           </div>
         </header>
+
+        <BonusModal open={bonusOpen} onClose={() => setBonusOpen(false)} />
 
         <div className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
           <div className="flex flex-wrap items-center gap-3">

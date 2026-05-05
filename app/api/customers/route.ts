@@ -37,6 +37,7 @@ export async function POST(request: Request) {
   const name = body?.name?.toString()?.trim();
   let phone = body?.phone?.toString()?.trim() ?? "";
   const password = body?.password?.toString()?.trim();
+  const birthDateRaw = body?.birthDate?.toString()?.trim() ?? "";
 
   if (!name || !phone || !password) {
     return NextResponse.json({ error: "Missing data" }, { status: 400 });
@@ -55,11 +56,13 @@ export async function POST(request: Request) {
   }
 
   const now = nowIso();
+  const birthDate =
+    birthDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(birthDateRaw) ? birthDateRaw : null;
   const result = db
     .prepare(
-      "INSERT INTO customers (name, phone, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
+      "INSERT INTO customers (name, phone, password, birth_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
     )
-    .run(name, phone, password, now, now);
+    .run(name, phone, password, birthDate, now, now);
 
   return NextResponse.json({ id: result.lastInsertRowid });
 }

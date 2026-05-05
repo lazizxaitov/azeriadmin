@@ -88,6 +88,7 @@ db.exec(`
     phone TEXT,
     password TEXT,
     bonus_balance INTEGER NOT NULL DEFAULT 0,
+    birth_date TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -236,6 +237,7 @@ function ensureColumn(table: string, column: string, type: string) {
 
 ensureColumn("customers", "password", "TEXT");
 ensureColumn("customers", "bonus_balance", "INTEGER NOT NULL DEFAULT 0");
+ensureColumn("customers", "birth_date", "TEXT");
 ensureColumn("categories", "sort_order", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("categories", "is_active", "INTEGER NOT NULL DEFAULT 1");
 ensureColumn("orders", "customer_address_id", "INTEGER");

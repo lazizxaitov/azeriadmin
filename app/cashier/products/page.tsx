@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import BonusModal from "../../_components/bonus-modal";
+
 type Category = {
   id: number;
   name_ru: string;
@@ -16,6 +18,7 @@ export default function CashierCategoriesPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bonusOpen, setBonusOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -58,6 +61,12 @@ export default function CashierCategoriesPage() {
               К заказам
             </Link>
             <button
+              onClick={() => setBonusOpen(true)}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              Добавить бонус
+            </button>
+            <button
               onClick={logout}
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
             >
@@ -65,6 +74,8 @@ export default function CashierCategoriesPage() {
             </button>
           </div>
         </header>
+
+        <BonusModal open={bonusOpen} onClose={() => setBonusOpen(false)} />
 
         {loading ? (
           <div className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">

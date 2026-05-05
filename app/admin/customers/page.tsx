@@ -23,6 +23,7 @@ export default function CustomersPage() {
   const [addForm, setAddForm] = useState({
     name: "",
     phone: "",
+    birthDate: "",
     password: "",
   });
   const [addressForm, setAddressForm] = useState({
@@ -56,6 +57,7 @@ export default function CustomersPage() {
     const payload = {
       name: addForm.name,
       phone: addForm.phone,
+      birthDate: addForm.birthDate || null,
       password: addForm.password,
     };
     await fetch("/api/customers", {
@@ -63,7 +65,7 @@ export default function CustomersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    setAddForm({ name: "", phone: "", password: "" });
+    setAddForm({ name: "", phone: "", birthDate: "", password: "" });
     setAddOpen(false);
     load();
   };
@@ -185,6 +187,9 @@ export default function CustomersPage() {
               </p>
               <p className="text-sm text-[var(--muted)]">
                 Телефон: {details.customer?.phone ?? "—"}
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                Дата рождения: {details.customer?.birth_date ?? "—"}
               </p>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-[var(--muted)]">
@@ -326,6 +331,17 @@ export default function CustomersPage() {
               value={addForm.phone}
               onChange={(event) =>
                 setAddForm((prev) => ({ ...prev, phone: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+            />
+          </label>
+          <label className="text-sm font-semibold">
+            Дата рождения
+            <input
+              type="date"
+              value={addForm.birthDate}
+              onChange={(event) =>
+                setAddForm((prev) => ({ ...prev, birthDate: event.target.value }))
               }
               className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
             />

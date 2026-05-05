@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import BonusModal from "../_components/bonus-modal";
+
 type Courier = {
   id: number;
   name: string;
@@ -60,6 +62,7 @@ export default function CashierPage() {
   const [now, setNow] = useState(() => new Date());
   const [rejecting, setRejecting] = useState<Order | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [bonusOpen, setBonusOpen] = useState(false);
 
   const playNotificationSound = () => {
     try {
@@ -216,6 +219,12 @@ export default function CashierPage() {
             >
               Товары
             </Link>
+            <button
+              onClick={() => setBonusOpen(true)}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              Добавить бонус
+            </button>
             <Link
               href="/cashier/history"
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
@@ -230,6 +239,8 @@ export default function CashierPage() {
             </button>
           </div>
         </header>
+
+        <BonusModal open={bonusOpen} onClose={() => setBonusOpen(false)} />
 
         {loading ? (
           <div className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">

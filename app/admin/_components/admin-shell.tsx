@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Modal, GhostButton } from "./ui";
+import BonusModal from "@/app/_components/bonus-modal";
 
 const navItems = [
   { href: "/admin", label: "Обзор", icon: "🏠" },
@@ -21,6 +22,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const [quickOpen, setQuickOpen] = useState(false);
+  const [bonusOpen, setBonusOpen] = useState(false);
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -51,6 +53,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--stroke)] bg-white text-xl font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
             >
               +
+            </button>
+            <button
+              onClick={() => setBonusOpen(true)}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              Добавить бонус
             </button>
             <Link
               href="/admin/settings"
@@ -143,6 +151,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           ))}
         </div>
       </Modal>
+
+      <BonusModal open={bonusOpen} onClose={() => setBonusOpen(false)} />
 
     </div>
   );

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
+import BonusModal from "../../../_components/bonus-modal";
+
 type Category = {
   id: number;
   name_ru: string;
@@ -33,6 +35,7 @@ export default function CashierCategoryProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"name" | "stockAsc" | "stockDesc">("name");
+  const [bonusOpen, setBonusOpen] = useState(false);
 
   useEffect(() => {
     if (!categoryId) return;
@@ -90,19 +93,29 @@ export default function CashierCategoryProductsPage() {
               </p>
             </div>
           </div>
-          <Link
-            href="/cashier/products"
-            className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
-          >
-            К категориям
-          </Link>
-          <button
-            onClick={logout}
-            className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
-          >
-            Выйти
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/cashier/products"
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              К категориям
+            </Link>
+            <button
+              onClick={() => setBonusOpen(true)}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              Добавить бонус
+            </button>
+            <button
+              onClick={logout}
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            >
+              Выйти
+            </button>
+          </div>
         </header>
+
+        <BonusModal open={bonusOpen} onClose={() => setBonusOpen(false)} />
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-semibold">
