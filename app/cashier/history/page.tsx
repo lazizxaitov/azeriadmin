@@ -44,6 +44,10 @@ const statusLabels: Record<string, string> = {
   canceled: "Не принят",
 };
 
+function normalizePhone(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 function formatTime(value?: string | null) {
   if (!value) return "—";
   const date = new Date(value);
@@ -85,9 +89,14 @@ export default function CashierHistoryPage() {
       const statusOk = statusFilter === "all" || order.status === statusFilter;
       if (!statusOk) return false;
       if (!q) return true;
+      const phoneDigits = normalizePhone(order.customer_phone ?? "");
+      const qDigits = normalizePhone(q);
       const target = `${order.id} ${order.customer_name ?? ""} ${order.customer_phone ?? ""}`
         .toLowerCase()
         .trim();
+      if (qDigits) {
+        return phoneDigits.includes(qDigits) || target.includes(q);
+      }
       return target.includes(q);
     });
   }, [orders, query, statusFilter]);

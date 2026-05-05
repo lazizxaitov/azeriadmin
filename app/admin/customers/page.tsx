@@ -13,6 +13,10 @@ type Customer = {
   total_spent: number;
 };
 
+function normalizePhone(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 export default function CustomersPage() {
   const [items, setItems] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,9 +138,9 @@ export default function CustomersPage() {
         ) : (
           items
             .filter((item) => {
-              const query = searchPhone.trim().toLowerCase();
+              const query = normalizePhone(searchPhone.trim());
               if (!query) return true;
-              const phone = (item.phone ?? "").toLowerCase();
+              const phone = normalizePhone(item.phone ?? "");
               return phone.includes(query);
             })
             .map((item) => (
