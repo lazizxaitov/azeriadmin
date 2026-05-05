@@ -223,7 +223,7 @@ export default function CashierPage() {
               onClick={() => setBonusOpen(true)}
               className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
             >
-              Добавить бонус
+              Бонусы клиентов
             </button>
             <Link
               href="/cashier/history"
