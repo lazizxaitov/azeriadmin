@@ -420,7 +420,7 @@ export default function BonusModal({
                 <label className="text-sm font-semibold">
                   Дата рождения
                   <input
-                    type="date"
+                    type="text"
                     value={createForm.birthDate}
                     onChange={(e) =>
                       setCreateForm((prev) => ({
@@ -428,6 +428,8 @@ export default function BonusModal({
                         birthDate: e.target.value,
                       }))
                     }
+                    inputMode="numeric"
+                    placeholder="YYYY-MM-DD"
                     className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
                   />
                 </label>
@@ -446,4 +448,3 @@ export default function BonusModal({
     </div>
   );
 }
-

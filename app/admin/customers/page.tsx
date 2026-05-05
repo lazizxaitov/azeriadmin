@@ -338,11 +338,13 @@ export default function CustomersPage() {
           <label className="text-sm font-semibold">
             Дата рождения
             <input
-              type="date"
+              type="text"
               value={addForm.birthDate}
               onChange={(event) =>
                 setAddForm((prev) => ({ ...prev, birthDate: event.target.value }))
               }
+              inputMode="numeric"
+              placeholder="YYYY-MM-DD"
               className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
             />
           </label>
