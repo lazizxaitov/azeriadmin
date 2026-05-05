@@ -275,6 +275,13 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, phone: event.target.value }))
                 }
+                onFocus={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    phone: prev.phone ? prev.phone : "+998",
+                  }))
+                }
+                placeholder="+998 90 123 45 67"
                 className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
               />
             </label>
@@ -593,6 +600,13 @@ export default function SettingsPage() {
               onChange={(event) =>
                 setPointForm((prev) => ({ ...prev, phone: event.target.value }))
               }
+              onFocus={() =>
+                setPointForm((prev) => ({
+                  ...prev,
+                  phone: prev.phone ? prev.phone : "+998",
+                }))
+              }
+              placeholder="+998 90 123 45 67"
               className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
             />
           </label>

@@ -110,7 +110,7 @@ export default function CustomersPage() {
           <input
             value={searchPhone}
             onChange={(event) => setSearchPhone(event.target.value)}
-            placeholder="Поиск по телефону"
+            placeholder="Поиск по телефону (+998...)"
             className="h-9 w-52 rounded-2xl border border-[var(--stroke)] bg-white px-3 text-xs"
           />
           <GhostButton onClick={() => setSearchPhone("")}>Поиск</GhostButton>
@@ -340,6 +340,13 @@ export default function CustomersPage() {
               onChange={(event) =>
                 setAddForm((prev) => ({ ...prev, phone: event.target.value }))
               }
+              onFocus={() =>
+                setAddForm((prev) => ({
+                  ...prev,
+                  phone: prev.phone ? prev.phone : "+998",
+                }))
+              }
+              placeholder="+998 90 123 45 67"
               className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
             />
           </label>
