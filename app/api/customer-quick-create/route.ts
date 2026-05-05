@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCashierSession, getSession } from "@/lib/auth";
+import { parseBirthDateToIso } from "@/lib/birth-date";
 import { getDb, nowIso } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -24,8 +25,7 @@ export async function POST(request: Request) {
     phone = `+998${phone.replace(/^\+?998/, "")}`;
   }
 
-  const birthDate =
-    birthDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(birthDateRaw) ? birthDateRaw : null;
+  const birthDate = parseBirthDateToIso(birthDateRaw);
 
   const db = getDb();
   const existing = db
@@ -49,4 +49,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ item });
 }
-

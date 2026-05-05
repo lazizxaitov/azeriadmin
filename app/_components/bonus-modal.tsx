@@ -429,7 +429,7 @@ export default function BonusModal({
                       }))
                     }
                     inputMode="numeric"
-                    placeholder="YYYY-MM-DD"
+                    placeholder="ДД.ММ.ГГГГ (например 31.12.1999)"
                     className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
                   />
                 </label>

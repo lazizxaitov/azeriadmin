@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { parseBirthDateToIso } from "@/lib/birth-date";
 import { getDb, nowIso } from "@/lib/db";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 
@@ -101,7 +102,7 @@ export async function PATCH(
     paramsList.push(phone);
   }
   if (birthDateRaw) {
-    const birthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthDateRaw) ? birthDateRaw : null;
+    const birthDate = parseBirthDateToIso(birthDateRaw);
     updates.push("birth_date = ?");
     paramsList.push(birthDate);
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { parseBirthDateToIso } from "@/lib/birth-date";
 import { getDb, nowIso } from "@/lib/db";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 
@@ -38,8 +39,7 @@ export async function POST(request: Request) {
   }
 
   const now = nowIso();
-  const birthDate =
-    birthDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(birthDateRaw) ? birthDateRaw : null;
+  const birthDate = parseBirthDateToIso(birthDateRaw);
   const result = db
     .prepare(
       "INSERT INTO customers (name, phone, password, birth_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"

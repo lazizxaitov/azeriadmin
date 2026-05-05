@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Card, SectionTitle, PrimaryButton, GhostButton, Modal } from "../_components/ui";
+import { formatBirthDateRu } from "@/lib/birth-date";
 
 type Customer = {
   id: number;
@@ -189,7 +190,10 @@ export default function CustomersPage() {
                 Телефон: {details.customer?.phone ?? "—"}
               </p>
               <p className="text-sm text-[var(--muted)]">
-                Дата рождения: {details.customer?.birth_date ?? "—"}
+                Дата рождения:{" "}
+                {details.customer?.birth_date
+                  ? formatBirthDateRu(details.customer.birth_date)
+                  : "—"}
               </p>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-[var(--muted)]">
@@ -344,7 +348,7 @@ export default function CustomersPage() {
                 setAddForm((prev) => ({ ...prev, birthDate: event.target.value }))
               }
               inputMode="numeric"
-              placeholder="YYYY-MM-DD"
+              placeholder="ДД.ММ.ГГГГ (например 31.12.1999)"
               className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
             />
           </label>
