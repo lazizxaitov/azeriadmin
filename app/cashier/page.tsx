@@ -79,6 +79,7 @@ export default function CashierPage() {
   const [pushConfigured, setPushConfigured] = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushPublicKey, setPushPublicKey] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
 
   const stopOrderAlert = () => {
     alertOrderIdRef.current = null;
@@ -117,6 +118,20 @@ export default function CashierPage() {
     }
   };
 
+  const showBrowserNotification = async (title: string, options: NotificationOptions) => {
+    try {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      const reg = await registerServiceWorker();
+      if (reg) {
+        await reg.showNotification(title, options);
+        return;
+      }
+      new Notification(title, options);
+    } catch {
+      // ignore
+    }
+  };
+
   const updatePushState = async () => {
     if (typeof window === "undefined") return;
     const supported =
@@ -150,6 +165,12 @@ export default function CashierPage() {
   const enableSoundNow = async () => {
     try {
       await ensureAudio();
+      try {
+        window.localStorage.setItem("cashier_sound_enabled", "1");
+      } catch {
+        // ignore
+      }
+      setSoundEnabled(true);
       const ctx = audioCtxRef.current;
       if (!ctx) return;
       const gain = ctx.createGain();
@@ -312,17 +333,11 @@ export default function CashierPage() {
           setNewOrderOpen(true);
           setUnreadCount((prev) => prev + fresh.length);
           setNotifications((prev) => [...fresh, ...prev].slice(0, 20));
-          startOrderAlert(fresh[0].id);
-          try {
-            if ("Notification" in window && Notification.permission === "granted") {
-              new Notification(`Новый заказ #${fresh[0].id}`, {
-                body: `${fresh[0].total_amount.toLocaleString("ru-RU")} сум · ${fresh[0].customer_phone ?? "—"}`,
-                tag: `order-${fresh[0].id}`,
-              });
-            }
-          } catch {
-            // ignore
-          }
+          if (soundEnabled) startOrderAlert(fresh[0].id);
+          showBrowserNotification(`Новый заказ #${fresh[0].id}`, {
+            body: `${fresh[0].total_amount.toLocaleString("ru-RU")} сум · ${fresh[0].customer_phone ?? "—"}`,
+            tag: `order-${fresh[0].id}`,
+          }).catch(() => null);
         }
       })
       .finally(() => setLoading(false));
@@ -331,6 +346,12 @@ export default function CashierPage() {
   useEffect(() => {
     load();
     updatePushState().catch(() => null);
+    registerServiceWorker().catch(() => null);
+    try {
+      setSoundEnabled(window.localStorage.getItem("cashier_sound_enabled") === "1");
+    } catch {
+      setSoundEnabled(false);
+    }
     const timer = setInterval(load, 10000);
     const clock = setInterval(() => setNow(new Date()), 1000);
     return () => {
