@@ -68,6 +68,17 @@ export default function CashierPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [bonusOpen, setBonusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    typeof window === "undefined"
+      ? "unsupported"
+      : "Notification" in window
+        ? Notification.permission
+        : "unsupported"
+  );
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushConfigured, setPushConfigured] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushPublicKey, setPushPublicKey] = useState<string | null>(null);
 
   const stopOrderAlert = () => {
     alertOrderIdRef.current = null;
@@ -83,6 +94,117 @@ export default function CashierPage() {
       }
       alertSourceRef.current = null;
     }
+  };
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const registerServiceWorker = async () => {
+    if (!("serviceWorker" in navigator)) return null;
+    try {
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      return reg;
+    } catch {
+      return null;
+    }
+  };
+
+  const updatePushState = async () => {
+    if (typeof window === "undefined") return;
+    const supported =
+      "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    setPushSupported(supported);
+    if (!supported) return;
+
+    const cfgRes = await fetch("/api/push/config").catch(() => null);
+    const cfg = cfgRes ? await cfgRes.json().catch(() => null) : null;
+    setPushConfigured(Boolean(cfg?.configured));
+    setPushPublicKey(typeof cfg?.publicKey === "string" ? cfg.publicKey : null);
+
+    const reg = await registerServiceWorker();
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    setPushSubscribed(Boolean(sub));
+  };
+
+  const enableBrowserNotifications = async () => {
+    if (!("Notification" in window)) {
+      setNotifPermission("unsupported");
+      return "unsupported" as const;
+    }
+    const permission = await Notification.requestPermission().catch(
+      () => "default" as NotificationPermission
+    );
+    setNotifPermission(permission);
+    return permission;
+  };
+
+  const enableSoundNow = async () => {
+    try {
+      await ensureAudio();
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      const gain = ctx.createGain();
+      gain.gain.value = 1.0;
+      gain.connect(ctx.destination);
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      osc.connect(gain);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+    } catch {
+      // ignore
+    }
+  };
+
+  const subscribePush = async () => {
+    if (!pushSupported || !pushConfigured || !pushPublicKey) return;
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") {
+      const perm = await enableBrowserNotifications();
+      if (perm !== "granted") return;
+    }
+    const reg = await registerServiceWorker();
+    if (!reg) return;
+    const existing = await reg.pushManager.getSubscription();
+    const sub =
+      existing ??
+      (await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(pushPublicKey),
+      }));
+    await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sub),
+    });
+    setPushSubscribed(true);
+  };
+
+  const unsubscribePush = async () => {
+    const reg = await registerServiceWorker();
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      setPushSubscribed(false);
+      return;
+    }
+    await fetch("/api/push/unsubscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: sub.endpoint }),
+    }).catch(() => null);
+    await sub.unsubscribe().catch(() => null);
+    setPushSubscribed(false);
   };
 
   const ensureAudio = async () => {
@@ -191,6 +313,16 @@ export default function CashierPage() {
           setUnreadCount((prev) => prev + fresh.length);
           setNotifications((prev) => [...fresh, ...prev].slice(0, 20));
           startOrderAlert(fresh[0].id);
+          try {
+            if ("Notification" in window && Notification.permission === "granted") {
+              new Notification(`Новый заказ #${fresh[0].id}`, {
+                body: `${fresh[0].total_amount.toLocaleString("ru-RU")} сум · ${fresh[0].customer_phone ?? "—"}`,
+                tag: `order-${fresh[0].id}`,
+              });
+            }
+          } catch {
+            // ignore
+          }
         }
       })
       .finally(() => setLoading(false));
@@ -198,6 +330,7 @@ export default function CashierPage() {
 
   useEffect(() => {
     load();
+    updatePushState().catch(() => null);
     const timer = setInterval(load, 10000);
     const clock = setInterval(() => setNow(new Date()), 1000);
     return () => {
@@ -618,6 +751,75 @@ export default function CashierPage() {
                 >
                   Закрыть
                 </button>
+              </div>
+
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+                    Разрешения
+                  </p>
+                  <p className="mt-1 font-semibold text-[var(--ink)]">
+                    Уведомления:{" "}
+                    {notifPermission === "unsupported"
+                      ? "не поддерживается"
+                      : notifPermission === "granted"
+                        ? "включены"
+                        : notifPermission === "denied"
+                          ? "заблокированы"
+                          : "не включены"}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={enableBrowserNotifications}
+                      className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm"
+                    >
+                      Включить уведомления
+                    </button>
+                    <button
+                      onClick={enableSoundNow}
+                      className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm"
+                    >
+                      Включить звук
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+                    Push
+                  </p>
+                  <p className="mt-1 font-semibold text-[var(--ink)]">
+                    {pushSupported
+                      ? pushConfigured
+                        ? pushSubscribed
+                          ? "подписка активна"
+                          : "не подписаны"
+                        : "не настроено на сервере"
+                      : "не поддерживается"}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={subscribePush}
+                      disabled={!pushSupported || !pushConfigured || pushSubscribed}
+                      className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Включить push
+                    </button>
+                    <button
+                      onClick={unsubscribePush}
+                      disabled={!pushSubscribed}
+                      className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Выключить push
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => updatePushState().catch(() => null)}
+                    className="mt-2 text-xs font-semibold text-[var(--muted)] underline"
+                  >
+                    Обновить статус
+                  </button>
+                </div>
               </div>
 
               {notifications.length === 0 ? (
