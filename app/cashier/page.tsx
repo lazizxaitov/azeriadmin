@@ -67,6 +67,7 @@ export default function CashierPage() {
   const [rejecting, setRejecting] = useState<Order | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [bonusOpen, setBonusOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const stopOrderAlert = () => {
     alertOrderIdRef.current = null;
@@ -251,7 +252,7 @@ export default function CashierPage() {
   );
 
   return (
-    <div className="min-h-screen grainy px-6 py-8">
+    <div className="min-h-screen grainy px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
           <div className="flex items-center gap-3">
@@ -280,37 +281,93 @@ export default function CashierPage() {
                 </span>
               ) : null}
             </button>
-            <div className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm">
+            <div className="hidden rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm sm:block">
               {now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
             </div>
-            <Link
-              href="/cashier/products"
-              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
-            >
-              Товары
-            </Link>
             <button
               onClick={() => setBonusOpen(true)}
-              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+              className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] sm:px-4 sm:text-sm"
             >
               Бонусы клиентов
             </button>
-            <Link
-              href="/cashier/history"
-              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
-            >
-              История заказов
-            </Link>
+            <div className="hidden items-center gap-3 sm:flex">
+              <Link
+                href="/cashier/products"
+                className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+              >
+                Товары
+              </Link>
+              <Link
+                href="/cashier/history"
+                className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+              >
+                История заказов
+              </Link>
+              <button
+                onClick={logout}
+                className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+              >
+                Выйти
+              </button>
+            </div>
             <button
-              onClick={logout}
-              className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+              onClick={() => setMenuOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--stroke)] bg-white text-lg font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] sm:hidden"
+              aria-label="Меню"
             >
-              Выйти
+              ☰
             </button>
           </div>
         </header>
 
         <BonusModal open={bonusOpen} onClose={() => setBonusOpen(false)} />
+        {menuOpen ? (
+          <div className="fixed inset-0 z-50 flex items-start justify-end px-4 py-6 sm:hidden">
+            <div
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div className="relative z-10 w-full max-w-xs rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-extrabold text-[var(--ink)]">Меню</p>
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm"
+                >
+                  Закрыть
+                </button>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm">
+                  {now.toLocaleTimeString("ru-RU", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+                <Link
+                  href="/cashier/products"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm font-bold text-[var(--ink)] shadow-sm"
+                >
+                  Товары
+                </Link>
+                <Link
+                  href="/cashier/history"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm font-bold text-[var(--ink)] shadow-sm"
+                >
+                  История заказов
+                </Link>
+                <button
+                  onClick={logout}
+                  className="w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm font-bold text-[var(--ink)] shadow-sm"
+                >
+                  Выйти
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
@@ -325,10 +382,10 @@ export default function CashierPage() {
             {activeOrders.map((order) => (
               <div
                 key={order.id}
-                className="rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]"
+                className="overflow-hidden rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-5 shadow-[var(--shadow)] sm:p-6"
               >
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
                       Заказ #{order.id}
                     </p>
@@ -339,16 +396,16 @@ export default function CashierPage() {
                       Статус: {statusLabels[order.status] ?? order.status}
                     </p>
                   </div>
-                  <div className="text-right text-sm text-[var(--muted)]">
-                    {order.customer_name ?? "Гость"}
+                  <div className="max-w-[52%] text-right text-sm text-[var(--muted)] break-words">
+                    <span className="font-medium">{order.customer_name ?? "Гость"}</span>
                     <br />
-                    {order.customer_phone ?? ""}
+                    <span>{order.customer_phone ?? ""}</span>
                   </div>
                 </div>
 
                 <div className="mt-4 rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm">
                   <p className="font-semibold text-[var(--ink)]">Адрес доставки</p>
-                  <p className="text-[var(--muted)]">
+                  <p className="text-[var(--muted)] break-words">
                     {order.address_label ? `${order.address_label} · ` : ""}
                     {order.address_line ?? "—"}
                   </p>
@@ -356,12 +413,12 @@ export default function CashierPage() {
                     Способ оплаты: {order.payment_method ?? "—"}
                   </p>
                   {order.address_comment ? (
-                    <p className="text-[var(--muted)]">
+                    <p className="text-[var(--muted)] break-words">
                       Комментарий: {order.address_comment}
                     </p>
                   ) : null}
                   {order.comment ? (
-                    <p className="text-[var(--muted)]">
+                    <p className="text-[var(--muted)] break-words">
                       Комментарий к заказу: {order.comment}
                     </p>
                   ) : null}
@@ -371,12 +428,12 @@ export default function CashierPage() {
                   {order.items.map((item, index) => (
                     <div
                       key={`${order.id}-${index}`}
-                      className="flex items-center justify-between text-sm"
+                      className="flex items-center justify-between gap-3 text-sm"
                     >
-                      <span className="font-semibold text-[var(--ink)]">
+                      <span className="min-w-0 flex-1 truncate font-semibold text-[var(--ink)]">
                         {item.title_ru}
                       </span>
-                      <span className="text-[var(--muted)]">
+                      <span className="shrink-0 text-[var(--muted)]">
                         {item.quantity} × {item.price.toLocaleString("ru-RU")}
                       </span>
                     </div>
