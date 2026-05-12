@@ -564,8 +564,7 @@ export default function CashierPage() {
                   {order.status === "accepted" ? (
                     <button
                       onClick={() => setOrderStatus(order.id, "in_delivery")}
-                      disabled={!order.courier_id}
-                      className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
                     >
                       Доставляется
                     </button>
@@ -581,7 +580,7 @@ export default function CashierPage() {
                 </div>
                 {order.status === "accepted" && !order.courier_id ? (
                   <p className="mt-2 text-xs text-[var(--muted)]">
-                    Выберите доставщика, чтобы начать доставку.
+                    Доставщик не выбран (необязательно).
                   </p>
                 ) : null}
               </div>
