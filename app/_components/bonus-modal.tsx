@@ -182,7 +182,7 @@ export default function BonusModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={closeAll} />
-      <div className="relative z-10 w-full max-w-2xl rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
+      <div className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-4 shadow-[var(--shadow)] sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-extrabold text-[var(--ink)]">Бонусы</h3>
@@ -192,13 +192,14 @@ export default function BonusModal({
           </div>
           <button
             onClick={closeAll}
-            className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+            className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] sm:px-4"
           >
             Закрыть
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="max-h-[78vh] overflow-y-auto pr-1 sm:max-h-[80vh]">
+          <div className="space-y-4">
           <div className="rounded-3xl border border-[var(--stroke)] bg-white p-4">
             <div className="flex flex-wrap items-end gap-3">
               <label className="flex-1 text-sm font-semibold">
@@ -219,7 +220,7 @@ export default function BonusModal({
                     phone: prev.phone || phoneQuery,
                   }));
                 }}
-                className="h-[46px] rounded-2xl border border-[var(--stroke)] bg-white px-4 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+                className="h-[46px] w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] sm:w-auto"
               >
                 + Клиент
               </button>
@@ -255,11 +256,11 @@ export default function BonusModal({
             {selected ? (
               <div className="mt-4 rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-extrabold text-[var(--ink)]">
                       {selected.name}
                     </p>
-                    <p className="text-xs font-medium text-[var(--muted)]">
+                    <p className="text-xs font-medium text-[var(--muted)] break-words">
                       {selected.phone ?? "—"}
                     </p>
                   </div>
@@ -277,7 +278,7 @@ export default function BonusModal({
           </div>
 
           {selected ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl border border-[var(--stroke)] bg-white p-4">
                 <p className="text-sm font-extrabold text-[var(--ink)]">
                   Начислить от покупки
@@ -314,7 +315,7 @@ export default function BonusModal({
                 </p>
 
                 <div className="mt-3 grid gap-3">
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <label className="text-sm font-semibold">
                       Режим
                       <select
@@ -348,7 +349,7 @@ export default function BonusModal({
                     {saving ? "Сохраняю..." : "Применить"}
                   </button>
 
-                  <div className="mt-1 grid gap-3 md:grid-cols-2">
+                  <div className="mt-1 grid gap-3 sm:grid-cols-2">
                     <label className="text-sm font-semibold">
                       Использовать бонус
                       <input
@@ -363,7 +364,7 @@ export default function BonusModal({
                       onClick={() =>
                         applyBonus({ op: "redeem", redeemAmount: Number(redeemAmount) })
                       }
-                      className="mt-7 w-full rounded-2xl bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow)] transition hover:-translate-y-[1px] hover:bg-[#9f5b33] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-2xl bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow)] transition hover:-translate-y-[1px] hover:bg-[#9f5b33] disabled:cursor-not-allowed disabled:opacity-60 sm:mt-7"
                     >
                       {saving ? "Сохраняю..." : "Использовать"}
                     </button>
@@ -376,6 +377,7 @@ export default function BonusModal({
           {error ? (
             <p className="text-sm font-semibold text-red-600">{error}</p>
           ) : null}
+          </div>
         </div>
 
         {createOpen ? (
@@ -384,14 +386,14 @@ export default function BonusModal({
               className="absolute inset-0 bg-black/30 backdrop-blur-sm"
               onClick={() => setCreateOpen(false)}
             />
-            <div className="relative z-10 w-full max-w-md rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
+            <div className="relative z-10 w-full max-w-md overflow-y-auto rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-4 shadow-[var(--shadow)] sm:max-h-[85vh] sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <h4 className="text-base font-extrabold text-[var(--ink)]">
                   Новый клиент
                 </h4>
                 <button
                   onClick={() => setCreateOpen(false)}
-                  className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)]"
+                  className="rounded-2xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-bold text-[var(--ink)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--brand)] sm:px-4"
                 >
                   Закрыть
                 </button>
