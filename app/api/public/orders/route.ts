@@ -1,7 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
 import { getDb, nowIso } from "@/lib/db";
-import { sendPushToAll } from "@/lib/push";
 import { rateLimit, requirePublicApiKey } from "@/lib/public-auth";
 
 export const runtime = "nodejs";
@@ -199,12 +198,6 @@ export async function POST(request: Request) {
 
   try {
     const orderId = create();
-    sendPushToAll({
-      title: "Новый заказ",
-      body: `Заказ #${orderId} принят из приложения`,
-      url: "/cashier",
-      tag: `order-${orderId}`,
-    }).catch(() => null);
     return NextResponse.json({ id: orderId });
   } catch (error) {
     if (error instanceof Error && error.message === "CUSTOMER_NOT_FOUND") {

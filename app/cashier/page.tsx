@@ -75,10 +75,6 @@ export default function CashierPage() {
         ? Notification.permission
         : "unsupported"
   );
-  const [pushSupported, setPushSupported] = useState(false);
-  const [pushConfigured, setPushConfigured] = useState(false);
-  const [pushSubscribed, setPushSubscribed] = useState(false);
-  const [pushPublicKey, setPushPublicKey] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   const stopOrderAlert = () => {
@@ -97,57 +93,13 @@ export default function CashierPage() {
     }
   };
 
-  const urlBase64ToUint8Array = (base64String: string) => {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
-  const registerServiceWorker = async () => {
-    if (!("serviceWorker" in navigator)) return null;
-    try {
-      const reg = await navigator.serviceWorker.register("/sw.js");
-      return reg;
-    } catch {
-      return null;
-    }
-  };
-
   const showBrowserNotification = async (title: string, options: NotificationOptions) => {
     try {
       if (!("Notification" in window) || Notification.permission !== "granted") return;
-      const reg = await registerServiceWorker();
-      if (reg) {
-        await reg.showNotification(title, options);
-        return;
-      }
       new Notification(title, options);
     } catch {
       // ignore
     }
-  };
-
-  const updatePushState = async () => {
-    if (typeof window === "undefined") return;
-    const supported =
-      "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    setPushSupported(supported);
-    if (!supported) return;
-
-    const cfgRes = await fetch("/api/push/config").catch(() => null);
-    const cfg = cfgRes ? await cfgRes.json().catch(() => null) : null;
-    setPushConfigured(Boolean(cfg?.configured));
-    setPushPublicKey(typeof cfg?.publicKey === "string" ? cfg.publicKey : null);
-
-    const reg = await registerServiceWorker();
-    if (!reg) return;
-    const sub = await reg.pushManager.getSubscription();
-    setPushSubscribed(Boolean(sub));
   };
 
   const enableBrowserNotifications = async () => {
@@ -185,47 +137,6 @@ export default function CashierPage() {
     } catch {
       // ignore
     }
-  };
-
-  const subscribePush = async () => {
-    if (!pushSupported || !pushConfigured || !pushPublicKey) return;
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") {
-      const perm = await enableBrowserNotifications();
-      if (perm !== "granted") return;
-    }
-    const reg = await registerServiceWorker();
-    if (!reg) return;
-    const existing = await reg.pushManager.getSubscription();
-    const sub =
-      existing ??
-      (await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(pushPublicKey),
-      }));
-    await fetch("/api/push/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sub),
-    });
-    setPushSubscribed(true);
-  };
-
-  const unsubscribePush = async () => {
-    const reg = await registerServiceWorker();
-    if (!reg) return;
-    const sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      setPushSubscribed(false);
-      return;
-    }
-    await fetch("/api/push/unsubscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint: sub.endpoint }),
-    }).catch(() => null);
-    await sub.unsubscribe().catch(() => null);
-    setPushSubscribed(false);
   };
 
   const ensureAudio = async () => {
@@ -345,8 +256,6 @@ export default function CashierPage() {
 
   useEffect(() => {
     load();
-    updatePushState().catch(() => null);
-    registerServiceWorker().catch(() => null);
     try {
       setSoundEnabled(window.localStorage.getItem("cashier_sound_enabled") === "1");
     } catch {
@@ -803,43 +712,6 @@ export default function CashierPage() {
                       Включить звук
                     </button>
                   </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
-                    Push
-                  </p>
-                  <p className="mt-1 font-semibold text-[var(--ink)]">
-                    {pushSupported
-                      ? pushConfigured
-                        ? pushSubscribed
-                          ? "подписка активна"
-                          : "не подписаны"
-                        : "не настроено на сервере"
-                      : "не поддерживается"}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      onClick={subscribePush}
-                      disabled={!pushSupported || !pushConfigured || pushSubscribed}
-                      className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Включить push
-                    </button>
-                    <button
-                      onClick={unsubscribePush}
-                      disabled={!pushSubscribed}
-                      className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--ink)] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Выключить push
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => updatePushState().catch(() => null)}
-                    className="mt-2 text-xs font-semibold text-[var(--muted)] underline"
-                  >
-                    Обновить статус
-                  </button>
                 </div>
               </div>
 
