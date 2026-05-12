@@ -59,10 +59,65 @@ export default function CashierPage() {
   const initializedRef = useRef(false);
   const lastSnapshotRef = useRef<string>("");
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const alertOrderIdRef = useRef<number | null>(null);
+  const alertTimerRef = useRef<number | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [rejecting, setRejecting] = useState<Order | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [bonusOpen, setBonusOpen] = useState(false);
+
+  const stopOrderAlert = () => {
+    alertOrderIdRef.current = null;
+    if (alertTimerRef.current) {
+      window.clearInterval(alertTimerRef.current);
+      alertTimerRef.current = null;
+    }
+  };
+
+  const startOrderAlert = async (orderId: number) => {
+    alertOrderIdRef.current = orderId;
+    if (alertTimerRef.current) return;
+
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state !== "running") {
+        await ctx.resume().catch(() => null);
+      }
+    } catch {
+      // ignore audio init errors
+    }
+
+    const playBeep = () => {
+      try {
+        if (!audioCtxRef.current) return;
+        const ctx = audioCtxRef.current;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.35;
+        gain.connect(ctx.destination);
+
+        const beep = (freq: number, start: number, duration: number) => {
+          const osc = ctx.createOscillator();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          osc.start(start);
+          osc.stop(start + duration);
+        };
+
+        const t = ctx.currentTime;
+        beep(880, t, 0.18);
+        beep(660, t + 0.22, 0.18);
+      } catch {
+        // ignore audio errors
+      }
+    };
+
+    playBeep();
+    alertTimerRef.current = window.setInterval(playBeep, 1200);
+  };
 
   const playNotificationSound = () => {
     try {
@@ -91,6 +146,14 @@ export default function CashierPage() {
         const ordersData = await ordersRes.json();
         const couriersData = await couriersRes.json();
         const incoming = ordersData.items ?? [];
+
+        if (alertOrderIdRef.current) {
+          const watched = incoming.find((o: Order) => o.id === alertOrderIdRef.current);
+          if (!watched || watched.status !== "paid") {
+            stopOrderAlert();
+          }
+        }
+
         const snapshot = JSON.stringify(
           incoming.map((order: Order) => [order.id, order.status, order.courier_id])
         );
@@ -120,7 +183,7 @@ export default function CashierPage() {
           setNewOrderOpen(true);
           setUnreadCount((prev) => prev + fresh.length);
           setNotifications((prev) => [...fresh, ...prev].slice(0, 20));
-          playNotificationSound();
+          startOrderAlert(fresh[0].id);
         }
       })
       .finally(() => setLoading(false));
@@ -133,6 +196,7 @@ export default function CashierPage() {
     return () => {
       clearInterval(timer);
       clearInterval(clock);
+      stopOrderAlert();
     };
   }, []);
 
