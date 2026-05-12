@@ -11,7 +11,7 @@ type Customer = {
 };
 
 function normalizePhoneInput(value: string) {
-  return value.replace(/[^\d+]/g, "");
+  return value.replace(/\D/g, "");
 }
 
 export default function BonusModal({

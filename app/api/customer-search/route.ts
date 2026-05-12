@@ -36,10 +36,13 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map((value) => `%${value}%`);
 
+  const phoneDigitsExpr =
+    "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), '+', ''), ' ', ''), '-', ''), '(', ''), ')', '')";
+
   const where =
     patterns.length === 1
-      ? "REPLACE(COALESCE(phone, ''), '+', '') LIKE ?"
-      : patterns.map(() => "REPLACE(COALESCE(phone, ''), '+', '') LIKE ?").join(" OR ");
+      ? `${phoneDigitsExpr} LIKE ?`
+      : patterns.map(() => `${phoneDigitsExpr} LIKE ?`).join(" OR ");
 
   const items = db
     .prepare(
