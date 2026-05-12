@@ -62,6 +62,15 @@ export default function BonusModal({
 
   useEffect(() => {
     if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const q = normalizePhoneInput(phoneQuery.trim());
     if (!q) {
       setResults([]);
@@ -180,9 +189,9 @@ export default function BonusModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 py-4 sm:items-center sm:py-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overscroll-contain px-4 py-4 sm:items-center sm:py-6">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={closeAll} />
-      <div className="relative z-10 flex w-full max-w-2xl max-h-[92vh] flex-col overflow-hidden rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-4 shadow-[var(--shadow)] sm:max-h-[90vh] sm:p-6">
+      <div className="relative z-10 flex w-full max-w-2xl max-h-[92vh] max-h-[92dvh] flex-col overflow-hidden rounded-3xl border border-[var(--stroke)] bg-[var(--surface)] p-4 shadow-[var(--shadow)] sm:max-h-[90vh] sm:max-h-[90dvh] sm:p-6">
         <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-extrabold text-[var(--ink)]">Бонусы</h3>
@@ -198,7 +207,7 @@ export default function BonusModal({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
           <div className="space-y-4">
             <div className="rounded-3xl border border-[var(--stroke)] bg-white p-4">
               <div className="flex flex-wrap items-end gap-3">
