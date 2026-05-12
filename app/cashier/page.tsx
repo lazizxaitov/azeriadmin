@@ -61,6 +61,8 @@ export default function CashierPage() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const alertOrderIdRef = useRef<number | null>(null);
   const alertTimerRef = useRef<number | null>(null);
+  const alertBufferRef = useRef<AudioBuffer | null>(null);
+  const alertSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [rejecting, setRejecting] = useState<Order | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -72,6 +74,31 @@ export default function CashierPage() {
       window.clearInterval(alertTimerRef.current);
       alertTimerRef.current = null;
     }
+    if (alertSourceRef.current) {
+      try {
+        alertSourceRef.current.stop();
+      } catch {
+        // ignore
+      }
+      alertSourceRef.current = null;
+    }
+  };
+
+  const ensureAudio = async () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext();
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx.state !== "running") {
+      await ctx.resume().catch(() => null);
+    }
+
+    if (!alertBufferRef.current) {
+      const response = await fetch("/sounds/notification.wav");
+      const arrayBuffer = await response.arrayBuffer();
+      alertBufferRef.current = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    }
+    return ctx;
   };
 
   const startOrderAlert = async (orderId: number) => {
@@ -79,44 +106,23 @@ export default function CashierPage() {
     if (alertTimerRef.current) return;
 
     try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioContext();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state !== "running") {
-        await ctx.resume().catch(() => null);
-      }
+      const ctx = await ensureAudio();
+      const buffer = alertBufferRef.current;
+      if (!buffer) return;
+
+      const gain = ctx.createGain();
+      gain.gain.value = 1.0;
+      gain.connect(ctx.destination);
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(gain);
+      source.start();
+      alertSourceRef.current = source;
     } catch {
-      // ignore audio init errors
+      // Autoplay может быть запрещён до первого клика пользователя — оставляем как есть.
     }
-
-    const playBeep = () => {
-      try {
-        if (!audioCtxRef.current) return;
-        const ctx = audioCtxRef.current;
-        const gain = ctx.createGain();
-        gain.gain.value = 0.35;
-        gain.connect(ctx.destination);
-
-        const beep = (freq: number, start: number, duration: number) => {
-          const osc = ctx.createOscillator();
-          osc.type = "sine";
-          osc.frequency.value = freq;
-          osc.connect(gain);
-          osc.start(start);
-          osc.stop(start + duration);
-        };
-
-        const t = ctx.currentTime;
-        beep(880, t, 0.18);
-        beep(660, t + 0.22, 0.18);
-      } catch {
-        // ignore audio errors
-      }
-    };
-
-    playBeep();
-    alertTimerRef.current = window.setInterval(playBeep, 1200);
   };
 
   const playNotificationSound = () => {
