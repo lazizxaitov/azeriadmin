@@ -63,6 +63,7 @@ export default function CashierPage() {
   const alertTimerRef = useRef<number | null>(null);
   const alertBufferRef = useRef<AudioBuffer | null>(null);
   const alertSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const alertAudioElRef = useRef<HTMLAudioElement | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [rejecting, setRejecting] = useState<Order | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -92,6 +93,29 @@ export default function CashierPage() {
       }
       alertSourceRef.current = null;
     }
+    if (alertAudioElRef.current) {
+      try {
+        alertAudioElRef.current.pause();
+        alertAudioElRef.current.currentTime = 0;
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const ensureAlertAudioEl = () => {
+    if (typeof window === "undefined") return null;
+    if (!alertAudioElRef.current) {
+      const el = new Audio("/sounds/notification.wav");
+      el.preload = "auto";
+      el.loop = true;
+      el.volume = 1.0;
+      // iOS Safari helps when not forcing fullscreen.
+      // @ts-expect-error - playsInline exists on HTMLMediaElement in browsers.
+      el.playsInline = true;
+      alertAudioElRef.current = el;
+    }
+    return alertAudioElRef.current;
   };
 
   const showBrowserNotification = async (title: string, options: NotificationOptions) => {
@@ -117,6 +141,28 @@ export default function CashierPage() {
 
   const enableSoundNow = async () => {
     try {
+      const el = ensureAlertAudioEl();
+      if (el) {
+        try {
+          el.loop = false;
+          el.currentTime = 0;
+          const playPromise = el.play();
+          if (playPromise) await playPromise;
+          // "Unlock" on iOS: play a tiny bit, then stop.
+          window.setTimeout(() => {
+            try {
+              el.pause();
+              el.currentTime = 0;
+              el.loop = true;
+            } catch {
+              // ignore
+            }
+          }, 180);
+        } catch {
+          // ignore (fallback to WebAudio)
+        }
+      }
+
       await ensureAudio();
       try {
         window.localStorage.setItem("cashier_sound_enabled", "1");
@@ -163,6 +209,20 @@ export default function CashierPage() {
     if (alertTimerRef.current) return;
 
     try {
+      const el = ensureAlertAudioEl();
+      if (el) {
+        try {
+          el.loop = true;
+          el.volume = 1.0;
+          el.currentTime = 0;
+          const playPromise = el.play();
+          if (playPromise) await playPromise;
+          return;
+        } catch {
+          // fallback to WebAudio below
+        }
+      }
+
       const ctx = await ensureAudio();
       const buffer = alertBufferRef.current;
       if (!buffer) return;
