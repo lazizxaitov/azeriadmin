@@ -76,6 +76,7 @@ export default function CashierPage() {
         : "unsupported"
   );
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundBlocked, setSoundBlocked] = useState(false);
 
   const stopOrderAlert = () => {
     alertOrderIdRef.current = null;
@@ -123,6 +124,7 @@ export default function CashierPage() {
         // ignore
       }
       setSoundEnabled(true);
+      setSoundBlocked(false);
       const ctx = audioCtxRef.current;
       if (!ctx) return;
       const gain = ctx.createGain();
@@ -176,7 +178,8 @@ export default function CashierPage() {
       source.start();
       alertSourceRef.current = source;
     } catch {
-      // Autoplay может быть запрещён до первого клика пользователя — оставляем как есть.
+      // Autoplay может быть запрещён до первого клика пользователя.
+      setSoundBlocked(true);
     }
   };
 
@@ -244,7 +247,7 @@ export default function CashierPage() {
           setNewOrderOpen(true);
           setUnreadCount((prev) => prev + fresh.length);
           setNotifications((prev) => [...fresh, ...prev].slice(0, 20));
-          if (soundEnabled) startOrderAlert(fresh[0].id);
+          startOrderAlert(fresh[0].id);
           showBrowserNotification(`Новый заказ #${fresh[0].id}`, {
             body: `${fresh[0].total_amount.toLocaleString("ru-RU")} сум · ${fresh[0].customer_phone ?? "—"}`,
             tag: `order-${fresh[0].id}`,
@@ -256,17 +259,27 @@ export default function CashierPage() {
 
   useEffect(() => {
     load();
+    let storedEnabled = false;
     try {
-      setSoundEnabled(window.localStorage.getItem("cashier_sound_enabled") === "1");
+      storedEnabled = window.localStorage.getItem("cashier_sound_enabled") === "1";
+      setSoundEnabled(storedEnabled);
     } catch {
       setSoundEnabled(false);
     }
+
+    const unlockOnce = () => {
+      if (!storedEnabled) return;
+      enableSoundNow().catch(() => null);
+    };
+    window.addEventListener("pointerdown", unlockOnce, { once: true });
+
     const timer = setInterval(load, 10000);
     const clock = setInterval(() => setNow(new Date()), 1000);
     return () => {
       clearInterval(timer);
       clearInterval(clock);
       stopOrderAlert();
+      window.removeEventListener("pointerdown", unlockOnce);
     };
   }, []);
 
@@ -712,6 +725,11 @@ export default function CashierPage() {
                       Включить звук
                     </button>
                   </div>
+                  {soundBlocked ? (
+                    <p className="mt-2 text-xs font-semibold text-red-600">
+                      Звук заблокирован браузером. Нажмите «Включить звук».
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
