@@ -166,6 +166,7 @@ db.exec(`
     card_payment_text TEXT NOT NULL DEFAULT '',
     payme_qr_image_url TEXT NOT NULL DEFAULT '',
     click_qr_image_url TEXT NOT NULL DEFAULT '',
+    support_phone TEXT NOT NULL DEFAULT '',
     instagram TEXT,
     telegram TEXT,
     updated_at TEXT NOT NULL
@@ -262,6 +263,7 @@ ensureColumn("settings", "cash_payment_enabled", "INTEGER NOT NULL DEFAULT 1");
 ensureColumn("settings", "card_payment_text", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("settings", "payme_qr_image_url", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("settings", "click_qr_image_url", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("settings", "support_phone", "TEXT NOT NULL DEFAULT ''");
 
 function tableHasRows(table: string) {
   const row = db.prepare(`SELECT 1 FROM ${table} LIMIT 1`).get() as
@@ -349,8 +351,8 @@ if (!hasAnyData) {
 
 db.prepare(
   `INSERT OR IGNORE INTO settings
-   (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_percent, bonus_redeem_amount, card_payment_enabled, cash_payment_enabled, card_payment_text, payme_qr_image_url, click_qr_image_url, instagram, telegram, updated_at)
-   VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 0, 25000, 1, 1, '', '', '', '', '', ?)`
+   (id, cafe_name, phone, address, work_hours, delivery_fee, min_order, currency, bonus_percent, bonus_redeem_amount, card_payment_enabled, cash_payment_enabled, card_payment_text, payme_qr_image_url, click_qr_image_url, support_phone, instagram, telegram, updated_at)
+   VALUES (1, 'Azeri Cafe', '', '', '', 0, 0, 'сум', 0, 25000, 1, 1, '', '', '', '', '', '', ?)`
 ).run(nowIso());
 
 export function getDb() {

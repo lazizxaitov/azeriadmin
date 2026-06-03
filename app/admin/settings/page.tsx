@@ -19,6 +19,7 @@ type Settings = {
   card_payment_text: string;
   payme_qr_image_url: string;
   click_qr_image_url: string;
+  support_phone: string;
   instagram: string;
   telegram: string;
 };
@@ -70,6 +71,7 @@ export default function SettingsPage() {
     card_payment_text: "",
     payme_qr_image_url: "",
     click_qr_image_url: "",
+    support_phone: "",
     instagram: "",
     telegram: "",
   });
@@ -136,6 +138,7 @@ export default function SettingsPage() {
         cardPaymentText: form.card_payment_text,
         paymeQrImageUrl: form.payme_qr_image_url,
         clickQrImageUrl: form.click_qr_image_url,
+        supportPhone: form.support_phone,
         instagram: form.instagram,
         telegram: form.telegram,
       }),
@@ -315,6 +318,23 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, address: event.target.value }))
                 }
+                className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+              />
+            </label>
+            <label className="text-sm font-semibold">
+              Номер телефона тех поддержки
+              <input
+                value={form.support_phone}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, support_phone: event.target.value }))
+                }
+                onFocus={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    support_phone: prev.support_phone ? prev.support_phone : "+998",
+                  }))
+                }
+                placeholder="+998 90 123 45 67"
                 className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
               />
             </label>
