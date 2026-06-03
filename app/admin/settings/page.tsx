@@ -17,6 +17,8 @@ type Settings = {
   card_payment_enabled: number;
   cash_payment_enabled: number;
   card_payment_text: string;
+  payme_qr_image_url: string;
+  click_qr_image_url: string;
   instagram: string;
   telegram: string;
 };
@@ -66,6 +68,8 @@ export default function SettingsPage() {
     card_payment_enabled: 1,
     cash_payment_enabled: 1,
     card_payment_text: "",
+    payme_qr_image_url: "",
+    click_qr_image_url: "",
     instagram: "",
     telegram: "",
   });
@@ -75,6 +79,8 @@ export default function SettingsPage() {
   const [downloadingFull, setDownloadingFull] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [uploadingPayme, setUploadingPayme] = useState(false);
+  const [uploadingClick, setUploadingClick] = useState(false);
 
   const [points, setPoints] = useState<PickupPoint[]>([]);
   const [pointsLoading, setPointsLoading] = useState(true);
@@ -128,11 +134,25 @@ export default function SettingsPage() {
         cardPaymentEnabled: form.card_payment_enabled === 1,
         cashPaymentEnabled: form.cash_payment_enabled === 1,
         cardPaymentText: form.card_payment_text,
+        paymeQrImageUrl: form.payme_qr_image_url,
+        clickQrImageUrl: form.click_qr_image_url,
         instagram: form.instagram,
         telegram: form.telegram,
       }),
     });
     setSaving(false);
+  };
+
+  const uploadPaymentImage = async (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    const response = await fetch("/api/upload", { method: "POST", body });
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.error ?? "Upload failed");
+    }
+    const data = await response.json();
+    return data.url as string;
   };
 
   const downloadBackup = async () => {
@@ -459,6 +479,82 @@ export default function SettingsPage() {
                   Показывается в мобильном приложении, когда оплата картой выключена.
                 </span>
               </label>
+            ) : null}
+
+            {form.card_payment_enabled === 1 ? (
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] p-4">
+                  <p className="text-sm font-semibold text-[var(--ink)]">Payme</p>
+                  {form.payme_qr_image_url ? (
+                    <img
+                      src={form.payme_qr_image_url}
+                      alt="Payme QR"
+                      className="mt-3 h-40 w-full rounded-2xl object-contain bg-white"
+                    />
+                  ) : (
+                    <div className="mt-3 flex h-40 items-center justify-center rounded-2xl bg-white text-sm text-[var(--muted)]">
+                      Фото не загружено
+                    </div>
+                  )}
+                  <label className="mt-3 block cursor-pointer rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-center text-sm font-bold text-[var(--ink)] shadow-sm transition hover:border-[var(--brand)]">
+                    {uploadingPayme ? "Загружаю..." : "Загрузить фото Payme"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPayme}
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        setUploadingPayme(true);
+                        try {
+                          const url = await uploadPaymentImage(file);
+                          setForm((prev) => ({ ...prev, payme_qr_image_url: url }));
+                        } finally {
+                          setUploadingPayme(false);
+                          event.currentTarget.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] p-4">
+                  <p className="text-sm font-semibold text-[var(--ink)]">Click</p>
+                  {form.click_qr_image_url ? (
+                    <img
+                      src={form.click_qr_image_url}
+                      alt="Click QR"
+                      className="mt-3 h-40 w-full rounded-2xl object-contain bg-white"
+                    />
+                  ) : (
+                    <div className="mt-3 flex h-40 items-center justify-center rounded-2xl bg-white text-sm text-[var(--muted)]">
+                      Фото не загружено
+                    </div>
+                  )}
+                  <label className="mt-3 block cursor-pointer rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-center text-sm font-bold text-[var(--ink)] shadow-sm transition hover:border-[var(--brand)]">
+                    {uploadingClick ? "Загружаю..." : "Загрузить фото Click"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingClick}
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        setUploadingClick(true);
+                        try {
+                          const url = await uploadPaymentImage(file);
+                          setForm((prev) => ({ ...prev, click_qr_image_url: url }));
+                        } finally {
+                          setUploadingClick(false);
+                          event.currentTarget.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
             ) : null}
           </div>
 
