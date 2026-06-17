@@ -18,7 +18,9 @@ type Settings = {
   cash_payment_enabled: number;
   card_payment_text: string;
   payme_qr_image_url: string;
+  payme_link_url: string;
   click_qr_image_url: string;
+  click_link_url: string;
   support_phone: string;
   instagram: string;
   telegram: string;
@@ -70,7 +72,9 @@ export default function SettingsPage() {
     cash_payment_enabled: 1,
     card_payment_text: "",
     payme_qr_image_url: "",
+    payme_link_url: "",
     click_qr_image_url: "",
+    click_link_url: "",
     support_phone: "",
     instagram: "",
     telegram: "",
@@ -137,7 +141,9 @@ export default function SettingsPage() {
         cashPaymentEnabled: form.cash_payment_enabled === 1,
         cardPaymentText: form.card_payment_text,
         paymeQrImageUrl: form.payme_qr_image_url,
+        paymeLinkUrl: form.payme_link_url,
         clickQrImageUrl: form.click_qr_image_url,
+        clickLinkUrl: form.click_link_url,
         supportPhone: form.support_phone,
         instagram: form.instagram,
         telegram: form.telegram,
@@ -505,6 +511,20 @@ export default function SettingsPage() {
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] p-4">
                   <p className="text-sm font-semibold text-[var(--ink)]">Payme</p>
+                  <label className="mt-3 block text-sm font-semibold">
+                    Ссылка Payme
+                    <input
+                      value={form.payme_link_url}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, payme_link_url: event.target.value }))
+                      }
+                      placeholder="https://payme.uz/..."
+                      className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+                    />
+                  </label>
+                  <p className="mt-2 text-xs font-medium text-[var(--muted)]">
+                    Если ссылка заполнена, мобильное приложение откроет её при выборе Payme.
+                  </p>
                   {form.payme_qr_image_url ? (
                     <img
                       src={form.payme_qr_image_url}
@@ -541,6 +561,20 @@ export default function SettingsPage() {
 
                 <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] p-4">
                   <p className="text-sm font-semibold text-[var(--ink)]">Click</p>
+                  <label className="mt-3 block text-sm font-semibold">
+                    Ссылка Click
+                    <input
+                      value={form.click_link_url}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, click_link_url: event.target.value }))
+                      }
+                      placeholder="https://my.click.uz/..."
+                      className="mt-2 w-full rounded-2xl border border-[var(--stroke)] bg-white px-4 py-3 text-sm"
+                    />
+                  </label>
+                  <p className="mt-2 text-xs font-medium text-[var(--muted)]">
+                    Если ссылка заполнена, мобильное приложение откроет её при выборе Click.
+                  </p>
                   {form.click_qr_image_url ? (
                     <img
                       src={form.click_qr_image_url}

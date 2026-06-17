@@ -19,7 +19,9 @@ export async function GET() {
   const item = db.prepare("SELECT * FROM settings WHERE id = 1").get() as
     | {
         payme_qr_image_url?: string | null;
+        payme_link_url?: string | null;
         click_qr_image_url?: string | null;
+        click_link_url?: string | null;
       }
     | undefined;
 
@@ -30,11 +32,13 @@ export async function GET() {
           {
             code: "payme",
             title: "Payme",
+            link_url: item.payme_link_url ?? "",
             image_url: item.payme_qr_image_url ?? "",
           },
           {
             code: "click",
             title: "Click",
+            link_url: item.click_link_url ?? "",
             image_url: item.click_qr_image_url ?? "",
           },
         ],
