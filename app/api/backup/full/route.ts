@@ -4,6 +4,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import archiver from "archiver";
 
+import { getDb } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -20,8 +21,20 @@ export async function GET() {
     return NextResponse.json({ error: "Backup not found" }, { status: 404 });
   }
 
+  try {
+    getDb().pragma("wal_checkpoint(TRUNCATE)");
+  } catch {}
+
   const archive = archiver("zip", { zlib: { level: 9 } });
   archive.file(dbPath, { name: "azeri.db" });
+  const walPath = `${dbPath}-wal`;
+  const shmPath = `${dbPath}-shm`;
+  if (fs.existsSync(walPath)) {
+    archive.file(walPath, { name: "azeri.db-wal" });
+  }
+  if (fs.existsSync(shmPath)) {
+    archive.file(shmPath, { name: "azeri.db-shm" });
+  }
 
   const uploadsDir = path.join(dataDir, "uploads");
   if (fs.existsSync(uploadsDir)) {

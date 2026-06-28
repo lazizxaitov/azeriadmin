@@ -10,8 +10,9 @@ if (!fs.existsSync(dataDir)) {
 }
 
 const dbPath = path.join(dataDir, "azeri.db");
-const db = new Database(dbPath);
+let db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
+type SqliteDatabase = InstanceType<typeof Database>;
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS categories (
@@ -276,20 +277,20 @@ function tableHasRows(table: string) {
   return Boolean(row);
 }
 
-function tableExists(source: any, table: string) {
+function tableExists(source: SqliteDatabase, table: string) {
   const row = source
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
     .get(table) as { name?: string } | undefined;
   return Boolean(row?.name);
 }
 
-function getColumns(source: any, table: string) {
+function getColumns(source: SqliteDatabase, table: string) {
   return (
     source.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
   ).map((col) => col.name);
 }
 
-function copyTable(source: any, target: any, table: string) {
+function copyTable(source: SqliteDatabase, target: SqliteDatabase, table: string) {
   if (!tableExists(source, table)) return;
   if (tableHasRows(table)) return;
   const rows = source.prepare(`SELECT * FROM ${table}`).all() as Array<
@@ -360,6 +361,15 @@ db.prepare(
 ).run(nowIso());
 
 export function getDb() {
+  return db;
+}
+
+export function resetDbConnection() {
+  try {
+    db.close();
+  } catch {}
+  db = new Database(dbPath);
+  db.pragma("journal_mode = WAL");
   return db;
 }
 

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import AdmZip from "adm-zip";
 
+import { resetDbConnection } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -14,6 +15,12 @@ async function replaceFile(targetPath: string, data: Buffer) {
     await fs.unlink(targetPath);
   } catch {}
   await fs.rename(tempPath, targetPath);
+}
+
+async function removeFileIfExists(targetPath: string) {
+  try {
+    await fs.unlink(targetPath);
+  } catch {}
 }
 
 export async function POST(request: Request) {
@@ -36,6 +43,9 @@ export async function POST(request: Request) {
 
   if (name.endsWith(".db")) {
     const dbPath = path.join(dataDir, "azeri.db");
+    resetDbConnection();
+    await removeFileIfExists(`${dbPath}-wal`);
+    await removeFileIfExists(`${dbPath}-shm`);
     await replaceFile(dbPath, buffer);
     return NextResponse.json({ ok: true, type: "db" });
   }
@@ -52,6 +62,9 @@ export async function POST(request: Request) {
     }
 
     const dbPath = path.join(dataDir, "azeri.db");
+    resetDbConnection();
+    await removeFileIfExists(`${dbPath}-wal`);
+    await removeFileIfExists(`${dbPath}-shm`);
     await replaceFile(dbPath, dbEntry.getData());
 
     const uploadsDir = path.join(dataDir, "uploads");
